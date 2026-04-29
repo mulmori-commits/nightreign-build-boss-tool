@@ -1,19 +1,23 @@
-// URLパラメータからトークンを取得、なければCONFIGから
 function getToken() {
   const params = new URLSearchParams(location.search);
-  return params.get('token') || (typeof CONFIG !== 'undefined' ? CONFIG.TOKEN : '');
+  return params.get('token') || (window._NR_TOKEN || '');
 }
 
 function getApiUrl() {
-  return typeof CONFIG !== 'undefined' ? CONFIG.API_URL : '';
+  return window._NR_API_URL || '';
 }
 
 const API = {
   async fetchAll() {
-    const url = `${getApiUrl()}?token=${getToken()}&action=getAllData`;
+    const token = getToken();
+    const apiUrl = getApiUrl();
+    if (!token || !apiUrl) throw new Error('configが未設定です。');
+    const url = `${apiUrl}?token=${token}&action=getAllData`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('API通信エラー');
-    return await res.json();
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    return data;
   }
 };
 
