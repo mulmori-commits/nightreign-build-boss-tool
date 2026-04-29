@@ -1,14 +1,22 @@
-// GAS APIとの通信
+// URLパラメータからトークンを取得、なければCONFIGから
+function getToken() {
+  const params = new URLSearchParams(location.search);
+  return params.get('token') || (typeof CONFIG !== 'undefined' ? CONFIG.TOKEN : '');
+}
+
+function getApiUrl() {
+  return typeof CONFIG !== 'undefined' ? CONFIG.API_URL : '';
+}
+
 const API = {
   async fetchAll() {
-    const url = `${CONFIG.API_URL}?token=${CONFIG.TOKEN}&action=getAllData`;
+    const url = `${getApiUrl()}?token=${getToken()}&action=getAllData`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('API通信エラー');
     return await res.json();
   }
 };
 
-// 全データをメモリに保持
 let DB = null;
 
 async function initDB() {
