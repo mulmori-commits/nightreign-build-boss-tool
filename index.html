@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ナイトレイン ボス+ビルド検索ツール</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .hero {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .hero h1 {
+      font-size: 1.6em;
+      color: #8bc34a;
+      margin-bottom: 8px;
+      letter-spacing: 0.1em;
+    }
+    .hero p {
+      color: #888;
+      font-size: 0.9em;
+      margin-bottom: 32px;
+    }
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .menu-card {
+      background: #2a2a2a;
+      border: 1px solid #3a3a3a;
+      border-radius: 12px;
+      padding: 24px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      text-decoration: none;
+      display: block;
+    }
+    .menu-card:hover {
+      border-color: #8bc34a;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(139,195,74,0.15);
+      text-decoration: none;
+    }
+    .menu-card .icon {
+      font-size: 2.4em;
+      margin-bottom: 12px;
+    }
+    .menu-card h2 {
+      font-size: 1.1em;
+      color: #f0f0f0;
+      margin-bottom: 8px;
+    }
+    .menu-card p {
+      font-size: 0.85em;
+      color: #888;
+      line-height: 1.5;
+    }
+    .status-bar {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 0.82em;
+      color: #666;
+      text-align: center;
+      max-width: 900px;
+      margin: 24px auto 0;
+    }
+    .status-bar.loaded {
+      color: #8bc34a;
+      border-color: #5a8a3a;
+    }
+    .status-bar.error {
+      color: #f88;
+      border-color: #8a3a3a;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <span class="site-title">⚔ NIGHTREIGN TOOL</span>
+    <div id="headerStatus" class="text-muted text-small">読み込み中...</div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="hero">
+    <h1>NIGHTREIGN TOOL</h1>
+    <p>エルデンリングナイトレイン ボス+ビルド検索ツール</p>
+
+    <div class="menu-grid">
+      <a href="boss.html" class="menu-card">
+        <div class="icon">👁</div>
+        <h2>ボス情報</h2>
+        <p>夜の王・道中ボスの耐性確認<br>1〜2日目から3日目ボスを絞り込み</p>
+      </a>
+
+      <a href="build.html" class="menu-card">
+        <div class="icon">⚔</div>
+        <h2>ビルド検索</h2>
+        <p>キャラ・遺物効果・付帯効果から<br>最適なビルドを探す</p>
+      </a>
+
+      <a href="boss.html#field" class="menu-card">
+        <div class="icon">🗺</div>
+        <h2>フィールドボス辞書</h2>
+        <p>ファーム中に出会うボスの<br>耐性を確認</p>
+      </a>
+    </div>
+
+    <div id="statusBar" class="status-bar">
+      データを読み込んでいます...
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="js/api.js"></script>
+<script>
+  // 起動時にデータ読み込みテスト
+  window.addEventListener('load', async function() {
+    const statusBar   = document.getElementById('statusBar');
+    const headerStatus = document.getElementById('headerStatus');
+
+    try {
+      const db = await initDB();
+      const buildCount = db.ビルド ? db.ビルド.length : 0;
+      const bossCount  = db.夜の王 ? db.夜の王.length : 0;
+
+      statusBar.textContent = `✅ データ読み込み完了 — ボス ${bossCount}件 / ビルド ${buildCount}件`;
+      statusBar.classList.add('loaded');
+      headerStatus.textContent = '✅ オンライン';
+      headerStatus.classList.add('text-green');
+    } catch(e) {
+      statusBar.textContent = '❌ データ読み込みに失敗しました。config.jsを確認してください。';
+      statusBar.classList.add('error');
+      headerStatus.textContent = '❌ オフライン';
+    }
+  });
+</script>
+</body>
+</html>
