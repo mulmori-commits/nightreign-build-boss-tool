@@ -20,11 +20,9 @@ const API = {
     const apiUrl = getApiUrl();
     if (!token || !apiUrl) throw new Error('TOKEN_NOT_SET');
 
-    const res = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, action: 'getAllData' })
-    });
+    // GETに変更
+    const url = `${apiUrl}?token=${token}&action=getAllData`;
+    const res = await fetch(url);
 
     if (!res.ok) throw new Error('API通信エラー');
     const data = await res.json();
