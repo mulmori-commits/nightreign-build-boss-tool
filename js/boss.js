@@ -1,327 +1,373 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ボス情報 — ナイトレイン支援ツール</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-    .tab-content { display: none; }
-    .tab-content.active { display: block; }
+// ===== 耐性記号の変換 =====
+function resistClass(symbol) {
+  switch(symbol) {
+    case '◎': return 'chip-great';
+    case '◯': return 'chip-good';
+    case '－': return 'chip-normal';
+    case '△': return 'chip-weak';
+    case '✕': return 'chip-immune';
+    default:   return 'chip-normal';
+  }
+}
 
-    /* 夜の王カード */
-    .boss-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 12px;
-    }
-    .boss-card {
-      background: #2a2a2a;
-      border: 1px solid #3a3a3a;
-      border-radius: 10px;
-      padding: 14px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .boss-card:hover {
-      border-color: #8bc34a;
-      transform: translateY(-2px);
-    }
-    .boss-card.active-card {
-      border-color: #8bc34a;
-      box-shadow: 0 0 0 2px rgba(139,195,74,0.3);
-    }
-    .boss-card h3 {
-      font-size: 0.95em;
-      color: #f0f0f0;
-      margin-bottom: 8px;
-    }
+const ATTR_LABELS    = ['物理','打撃','斬撃','刺突','魔力','炎','雷','聖'];
+const AILMENT_LABELS = ['出血','毒','腐敗','凍傷','睡眠','発狂'];
+const ATTR_KEYS      = ['物理耐性','打撃耐性','斬撃耐性','刺突耐性','魔力耐性','炎耐性','雷耐性','聖耐性'];
+const AILMENT_KEYS   = ['出血耐性','毒耐性','腐敗耐性','凍傷耐性','睡眠耐性','発狂耐性'];
 
-    /* 耐性チップ */
-    .resist-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 6px;
-    }
-    .resist-chip {
-      padding: 2px 7px;
-      border-radius: 4px;
-      font-size: 0.78em;
-      font-weight: bold;
-    }
-    .chip-great  { background: #2d1052; color: #f5ff30; border: 1px solid #7c3aed; } /* ◎ 弱点：紫＋蛍光黄 */
-    .chip-good   { background: #2e4a1e; color: #8bc34a; border: 1px solid #5a8a3a; }
-    .chip-normal { background: #2a2a2a; color: #aaa;    border: 1px solid #444; }
-    .chip-weak   { background: #1a1a1a; color: #555;    border: 1px solid #333; }
-    .chip-immune { background: #111;    color: #333;    border: 1px solid #222; }
+// ===== 耐性チップ生成 =====
+function buildResistChips(boss, keys, labels) {
+  return keys.map((key, i) => {
+    const val = boss[key] || '－';
+    return `<span class="resist-chip ${resistClass(val)}" title="${labels[i]}">${labels[i]} ${val}</span>`;
+  }).join('');
+}
 
-    /* ボス詳細インラインパネル */
-    .boss-detail-panel {
-      background: #2a2a2a;
-      border: 1px solid #8bc34a;
-      border-radius: 12px;
-      padding: 20px;
-      margin-top: 16px;
-      position: relative;
-      animation: slideDown 0.2s ease;
-    }
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    .detail-close-btn {
-      position: absolute;
-      top: 12px; right: 16px;
-      background: none;
-      border: none;
-      color: #888;
-      font-size: 1.4em;
-      cursor: pointer;
-      line-height: 1;
-    }
-    .detail-close-btn:hover { color: #f88; }
+// ===== 耐性テーブル生成 =====
+function buildResistTable(phase) {
+  return `
+    <table class="resist-table">
+      <thead>
+        <tr>
+          ${ATTR_LABELS.map(l => `<th>${l}</th>`).join('')}
+          ${AILMENT_LABELS.map(l => `<th>${l}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          ${ATTR_KEYS.map(k => {
+            const v = phase[k] || '－';
+            return `<td class="${resistClass(v)}">${v}</td>`;
+          }).join('')}
+          ${AILMENT_KEYS.map(k => {
+            const v = phase[k] || '－';
+            return `<td class="${resistClass(v)}">${v}</td>`;
+          }).join('')}
+        </tr>
+      </tbody>
+    </table>
+  `;
+}
 
-    /* サブボス詳細モーダル */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      z-index: 200;
-      overflow-y: auto;
-      padding: 20px;
-    }
-    .modal-overlay.show { display: flex; align-items: flex-start; justify-content: center; }
-    .modal {
-      background: #2a2a2a;
-      border: 1px solid #8bc34a;
-      border-radius: 12px;
-      padding: 20px;
-      max-width: 700px;
-      width: 100%;
-      margin: auto;
-      position: relative;
-    }
-    .modal-close {
-      position: absolute;
-      top: 12px; right: 16px;
-      background: none;
-      border: none;
-      color: #888;
-      font-size: 1.4em;
-      cursor: pointer;
-    }
-    .modal-close:hover { color: #f88; }
-    .modal h2 {
-      font-size: 1.1em;
-      color: #8bc34a;
-      margin-bottom: 12px;
-      padding-right: 24px;
-    }
+// ===== 夜の王ページ初期化 =====
+let allNightBosses = [];
+let allSubBosses   = [];
+let allRelations   = [];
+let currentNightFilter = 'all';
 
-    /* 絞り込みツール */
-    .selector-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    @media (max-width: 600px) {
-      .selector-grid { grid-template-columns: 1fr; }
-    }
-    .day-section {
-      background: #2a2a2a;
-      border-radius: 10px;
-      padding: 12px;
-    }
-    .boss-btn-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 8px;
-    }
-    .boss-select-btn {
-      padding: 5px 10px;
-      background: #3e3e3e;
-      border: 1px solid #4a4a4a;
-      border-radius: 6px;
-      color: #e0e0e0;
-      font-size: 0.85em;
-      cursor: pointer;
-      transition: all 0.2s;
-      user-select: none;
-    }
-    .boss-select-btn.selected {
-      background: #8bc34a;
-      color: #1a1a1a;
-      border-color: #689f38;
-      font-weight: bold;
-    }
-    .dlc-divider {
-      width: 100%;
-      border-top: 1px dashed #444;
-      margin: 6px 0;
-    }
-    .result-list {
-      list-style: none;
-    }
-    .result-list li {
-      background: #333;
-      margin-bottom: 6px;
-      padding: 10px 14px;
-      border-radius: 6px;
-      border-left: 4px solid #8bc34a;
-      font-size: 0.95em;
-    }
-    .result-list li.no-result {
-      border-left-color: #666;
-      color: #888;
-    }
-    .score-badge {
-      display: inline-block;
-      background: #444;
-      padding: 2px 10px;
-      border-radius: 4px;
-      font-size: 0.8em;
-      color: #8bc34a;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
+function initBossPage() {
+  allNightBosses = DB.夜の王  || [];
+  allSubBosses   = DB.サブボス || [];
+  allRelations   = DB.夜の王_サブボス || [];
 
-    /* フィールドボス */
-    .field-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 10px;
-    }
-    .field-card {
-      background: #2a2a2a;
-      border: 1px solid #3a3a3a;
-      border-radius: 8px;
-      padding: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .field-card:hover {
-      border-color: #8bc34a;
-    }
-    .field-card h4 {
-      font-size: 0.9em;
-      color: #e0e0e0;
-      margin-bottom: 4px;
-    }
-    .field-card p {
-      font-size: 0.78em;
-      color: #888;
-    }
-  </style>
-</head>
-<body>
+  renderNightBosses();
+  renderNarrowTool();
+  renderFieldBosses();
+}
 
-<header>
-  <div class="header-inner">
-    <a href="index.html" class="site-title">⚔ NIGHTREIGN TOOL</a>
-    <nav class="tab-nav">
-      <button class="tab-btn active" onclick="switchTab('night')">夜の王</button>
-      <button class="tab-btn" onclick="switchTab('narrow')">3日目絞り込み</button>
-      <button class="tab-btn" onclick="switchTab('field')" id="fieldTabBtn">フィールドボス</button>
-    </nav>
-  </div>
-</header>
+// ===== 夜の王一覧 =====
+function filterNight(cat, btn) {
+  currentNightFilter = cat;
+  document.querySelectorAll('#nightFilter .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  closeDetail();
+  renderNightBosses();
+}
 
-<div class="container">
+function renderNightBosses() {
+  const grid = document.getElementById('nightBossGrid');
+  const grouped = {};
+  allNightBosses.forEach(b => {
+    if (currentNightFilter !== 'all' && b['カテゴリ'] !== currentNightFilter) return;
+    const key = b['名前'];
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(b);
+  });
 
-  <div id="loading" class="loading">データを読み込んでいます</div>
-  <div id="errorMsg" class="error-msg hidden"></div>
+  grid.innerHTML = Object.entries(grouped).map(([name, phases]) => {
+    const first = phases[0];
+    const cat = first['カテゴリ'] || 'Main';
+    const chips = buildResistChips(first, ATTR_KEYS, ATTR_LABELS);
+    const safeName = name.replace(/'/g, "\\'");
 
-  <!-- タブ1：夜の王一覧 -->
-  <div id="tab-night" class="tab-content active hidden">
-    <div class="card">
-      <div class="section-title">夜の王一覧</div>
-      <div class="filter-group" id="nightFilter">
-        <button class="filter-btn active" onclick="filterNight('all', this)">全て</button>
-        <button class="filter-btn" onclick="filterNight('Main', this)">Main</button>
-        <button class="filter-btn" onclick="filterNight('DLC', this)">DLC</button>
+    return `
+      <div class="boss-card" data-name="${name.replace(/"/g,'&quot;')}"
+           onclick="showNightBossDetail('${safeName}')">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <h3>${name}</h3>
+          <span class="badge badge-${cat.toLowerCase()}">${cat}</span>
+        </div>
+        <div class="resist-row">${chips}</div>
+        ${first['特殊弱点'] ? `<div class="text-small text-muted" style="margin-top:6px;">⚡ ${first['特殊弱点']}</div>` : ''}
       </div>
-    </div>
-    <div class="boss-grid" id="nightBossGrid"></div>
+    `;
+  }).join('');
+}
 
-    <!-- インライン詳細パネル（カードグリッドの直下） -->
-    <div id="nightBossDetail" class="boss-detail-panel hidden">
-      <button class="detail-close-btn" onclick="closeDetail()">×</button>
-      <div id="nightBossDetailBody"></div>
-    </div>
-  </div>
+// ===== 夜の王詳細（インラインパネル） =====
+function showNightBossDetail(name) {
+  const phases = allNightBosses.filter(b => b['名前'] === name);
+  if (!phases.length) return;
 
-  <!-- タブ2：3日目絞り込み -->
-  <div id="tab-narrow" class="tab-content hidden">
-    <div class="selector-grid">
-      <div class="day-section">
-        <div class="section-title">1日目ボス</div>
-        <div class="boss-btn-grid" id="day1Btns"></div>
-      </div>
-      <div class="day-section">
-        <div class="section-title">2日目ボス</div>
-        <div class="boss-btn-grid" id="day2Btns"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="section-title">絞り込み結果</div>
-      <div id="candidateCount" class="score-badge">候補: 0</div>
-      <ul id="candidateList" class="result-list">
-        <li class="no-result">ボスを選択してください</li>
-      </ul>
-    </div>
-    <div style="text-align:right; margin-top:8px;">
-      <button class="btn btn-danger" onclick="resetNarrow()">リセット</button>
-    </div>
-  </div>
+  const first = phases[0];
+  const cat = first['カテゴリ'] || 'Main';
 
-  <!-- タブ3：フィールドボス -->
-  <div id="tab-field" class="tab-content hidden">
-    <div class="card">
-      <div class="section-title">フィールドボス辞書</div>
-      <input type="text" class="search-box" id="fieldSearch" placeholder="ボス名で検索..." oninput="filterField()">
-    </div>
-    <div class="field-list" id="fieldList"></div>
-  </div>
+  // 道中ボス取得
+  const relIds = allRelations
+    .filter(r => phases.some(p => p['ボスID'] === r['夜の王ID']))
+    .map(r => ({ sbId: r['サブボスID'], day: r['出現日'] }));
 
-</div>
+  const day1 = relIds.filter(r => String(r.day) === '1')
+    .map(r => allSubBosses.find(s => s['サブボスID'] === r.sbId))
+    .filter(Boolean);
+  const day2 = relIds.filter(r => String(r.day) === '2')
+    .map(r => allSubBosses.find(s => s['サブボスID'] === r.sbId))
+    .filter(Boolean);
 
-<!-- サブボス詳細モーダル（道中ボスチップからのみ使用） -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
-  <div class="modal" id="modalContent">
-    <button class="modal-close" onclick="closeModalBtn()">×</button>
-    <div id="modalBody"></div>
-  </div>
-</div>
+  let html = `<h2 style="color:#8bc34a; font-size:1.1em; margin-bottom:12px; padding-right:24px;">
+    ${name} <span class="badge badge-${cat.toLowerCase()}">${cat}</span>
+  </h2>`;
 
-<script src="js/api.js"></script>
-<script src="js/boss.js"></script>
-<script>
-  window.addEventListener('load', async function() {
-    try {
-      await initDB();
-      document.getElementById('loading').classList.add('hidden');
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('hidden'));
-      initBossPage();
-      const hash = location.hash.replace('#','');
-      if (hash === 'field' || hash === 'narrow') {
-        switchTab(hash);
-      }
-    } catch(e) {
-      document.getElementById('loading').classList.add('hidden');
-      if (e.message === 'TOKEN_NOT_SET' || e.message === 'TOKEN_INVALID') {
-        location.href = 'index.html';
-        return;
-      }
-      const err = document.getElementById('errorMsg');
-      err.textContent = '❌ データ読み込みに失敗しました: ' + e.message;
-      err.classList.remove('hidden');
+  // フェーズごとの耐性テーブル
+  phases.forEach(phase => {
+    const phaseLabel = phase['フェーズ']
+      ? `<div class="text-small text-muted" style="margin-bottom:4px;">（${phase['フェーズ']}）</div>`
+      : '';
+    html += `<div style="margin-bottom:12px;">${phaseLabel}${buildResistTable(phase)}</div>`;
+  });
+
+  if (first['特殊弱点']) {
+    html += `<div class="card" style="margin-bottom:10px;">⚡ <strong>特殊弱点：</strong>${first['特殊弱点']}</div>`;
+  }
+  if (first['対処法']) {
+    html += `<div class="card" style="margin-bottom:10px;">💡 <strong>対処法：</strong>${first['対処法']}</div>`;
+  }
+  if (first['備考']) {
+    html += `<div class="card" style="margin-bottom:10px;">📝 ${first['備考']}</div>`;
+  }
+
+  // 道中ボス
+  if (day1.length || day2.length) {
+    html += `<div class="section-title" style="margin-top:12px;">道中ボス候補</div>`;
+    if (day1.length) {
+      html += `<div class="text-small text-muted" style="margin-bottom:6px;">1日目</div>
+        <div class="resist-row" style="margin-bottom:10px;">
+          ${[...new Set(day1.map(s => s['名前']))].map(n =>
+            `<span class="resist-chip chip-normal"
+              onclick="showSubBossDetail('${n.replace(/'/g,"\\'")}'); event.stopPropagation();"
+              style="cursor:pointer;">${n}</span>`
+          ).join('')}
+        </div>`;
+    }
+    if (day2.length) {
+      html += `<div class="text-small text-muted" style="margin-bottom:6px;">2日目</div>
+        <div class="resist-row">
+          ${[...new Set(day2.map(s => s['名前']))].map(n =>
+            `<span class="resist-chip chip-normal"
+              onclick="showSubBossDetail('${n.replace(/'/g,"\\'")}'); event.stopPropagation();"
+              style="cursor:pointer;">${n}</span>`
+          ).join('')}
+        </div>`;
+    }
+  }
+
+  // パネルに表示
+  document.getElementById('nightBossDetailBody').innerHTML = html;
+  const panel = document.getElementById('nightBossDetail');
+  panel.classList.remove('hidden');
+
+  // 選択中カードをハイライト
+  document.querySelectorAll('.boss-card').forEach(c => {
+    c.classList.toggle('active-card', c.dataset.name === name);
+  });
+
+  // パネルへスクロール（ヘッダー分オフセット）
+  setTimeout(() => {
+    const top = panel.getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top, behavior: 'smooth' });
+  }, 50);
+}
+
+function closeDetail() {
+  document.getElementById('nightBossDetail').classList.add('hidden');
+  document.querySelectorAll('.boss-card').forEach(c => c.classList.remove('active-card'));
+}
+
+// ===== サブボス詳細モーダル =====
+function showSubBossDetail(name) {
+  const phases = allSubBosses.filter(b => b['名前'] === name);
+  if (!phases.length) return;
+
+  const first = phases[0];
+  let html = `<h2>${name}</h2>`;
+
+  phases.forEach(phase => {
+    const phaseLabel = phase['フェーズ']
+      ? `<div class="text-small text-muted" style="margin-bottom:4px;">（${phase['フェーズ']}）</div>`
+      : '';
+    html += `<div style="margin-bottom:12px;">${phaseLabel}${buildResistTable(phase)}</div>`;
+  });
+
+  if (first['備考']) {
+    html += `<div class="card">📝 ${first['備考']}</div>`;
+  }
+
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+// ===== 3日目絞り込みツール =====
+let selected1 = null;
+let selected2 = null;
+
+function renderNarrowTool() {
+  const day1Bosses = allSubBosses.filter(b =>
+    b['ボス種別'] === '道中' && String(b['出現日']).includes('1') && !b['フェーズ']
+  );
+  const day2Bosses = allSubBosses.filter(b =>
+    b['ボス種別'] === '道中' && String(b['出現日']).includes('2') && !b['フェーズ']
+  );
+
+  const mainDay1 = day1Bosses.filter(b => b['グループ'] === '夜ボス' || b['カテゴリ'] !== 'DLC');
+  const dlcDay1  = day1Bosses.filter(b => b['グループ'] !== '夜ボス' && b['カテゴリ'] === 'DLC');
+  const mainDay2 = day2Bosses.filter(b => b['グループ'] === '夜ボス' || b['カテゴリ'] !== 'DLC');
+  const dlcDay2  = day2Bosses.filter(b => b['グループ'] !== '夜ボス' && b['カテゴリ'] === 'DLC');
+
+  document.getElementById('day1Btns').innerHTML = renderBossBtns(mainDay1, dlcDay1, 1);
+  document.getElementById('day2Btns').innerHTML = renderBossBtns(mainDay2, dlcDay2, 2);
+}
+
+function renderBossBtns(main, dlc, day) {
+  let html = main.map(b =>
+    `<button class="boss-select-btn" data-name="${b['名前']}" data-day="${day}"
+      onclick="selectBoss(this, ${day})">${b['名前']}</button>`
+  ).join('');
+  if (dlc.length) {
+    html += `<div class="dlc-divider"></div>`;
+    html += dlc.map(b =>
+      `<button class="boss-select-btn" data-name="${b['名前']}" data-day="${day}"
+        onclick="selectBoss(this, ${day})">${b['名前']}</button>`
+    ).join('');
+  }
+  return html;
+}
+
+function selectBoss(btn, day) {
+  const name = btn.dataset.name;
+  if (day === 1) {
+    if (selected1 === name) {
+      selected1 = null;
+      btn.classList.remove('selected');
+    } else {
+      document.querySelectorAll('#day1Btns .boss-select-btn').forEach(b => b.classList.remove('selected'));
+      selected1 = name;
+      btn.classList.add('selected');
+    }
+  } else {
+    if (selected2 === name) {
+      selected2 = null;
+      btn.classList.remove('selected');
+    } else {
+      document.querySelectorAll('#day2Btns .boss-select-btn').forEach(b => b.classList.remove('selected'));
+      selected2 = name;
+      btn.classList.add('selected');
+    }
+  }
+  updateCandidates();
+}
+
+function updateCandidates() {
+  const list  = document.getElementById('candidateList');
+  const badge = document.getElementById('candidateCount');
+
+  const nightBossNames = [...new Set(allNightBosses.map(b => b['名前']))];
+
+  const results = nightBossNames.filter(name => {
+    const phases = allNightBosses.filter(b => b['名前'] === name);
+    const bossIds = phases.map(p => p['ボスID']);
+    const rels = allRelations.filter(r => bossIds.includes(r['夜の王ID']));
+
+    if (selected1) {
+      const sb = allSubBosses.find(s => s['名前'] === selected1);
+      if (!sb) return false;
+      const match = rels.some(r => r['サブボスID'] === sb['サブボスID'] && String(r['出現日']) === '1');
+      if (!match) return false;
+    }
+    if (selected2) {
+      const sb = allSubBosses.find(s => s['名前'] === selected2);
+      if (!sb) return false;
+      const match = rels.some(r => r['サブボスID'] === sb['サブボスID'] && String(r['出現日']) === '2');
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  badge.textContent = `候補: ${results.length}`;
+  if (results.length === 0) {
+    list.innerHTML = '<li class="no-result">条件に一致するボスはいません</li>';
+  } else {
+    list.innerHTML = results.map(name =>
+      `<li onclick="showNightBossDetail('${name.replace(/'/g,"\\'")}'); switchTab('night');"
+        style="cursor:pointer;">${name}</li>`
+    ).join('');
+  }
+}
+
+function resetNarrow() {
+  selected1 = null;
+  selected2 = null;
+  document.querySelectorAll('.boss-select-btn').forEach(b => b.classList.remove('selected'));
+  updateCandidates();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===== フィールドボス =====
+function renderFieldBosses(filter) {
+  const list = document.getElementById('fieldList');
+  const q = filter ? filter.toLowerCase() : '';
+  const bosses = allSubBosses.filter(b =>
+    b['ボス種別'] === 'フィールド' &&
+    (!q || b['名前'].toLowerCase().includes(q))
+  );
+
+  const unique = [];
+  const seen = new Set();
+  bosses.forEach(b => {
+    if (!seen.has(b['名前'])) {
+      seen.add(b['名前']);
+      unique.push(b);
     }
   });
-</script>
-</body>
-</html>
+
+  list.innerHTML = unique.map(b => `
+    <div class="field-card" onclick="showSubBossDetail('${b['名前'].replace(/'/g,"\\'")}')">
+      <h4>${b['名前']}</h4>
+      <p class="text-small text-muted">${b['前哨戦'] || b['備考'] || ''}</p>
+    </div>
+  `).join('');
+}
+
+function filterField() {
+  const q = document.getElementById('fieldSearch').value;
+  renderFieldBosses(q);
+}
+
+// ===== タブ切り替え =====
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  // イベント経由の場合のみボタンをハイライト
+  if (event && event.target) event.target.classList.add('active');
+  location.hash = tab === 'night' ? '' : tab;
+}
+
+// ===== モーダル（サブボス用） =====
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) {
+    document.getElementById('modalOverlay').classList.remove('show');
+  }
+}
+function closeModalBtn() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
