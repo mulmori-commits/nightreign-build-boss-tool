@@ -226,17 +226,33 @@ let selected1 = null;
 let selected2 = null;
 
 function renderNarrowTool() {
-  const day1Bosses = allSubBosses.filter(b =>
-    b['ボス種別'] === '道中' && String(b['出現日']).includes('1') && !b['フェーズ']
-  );
-  const day2Bosses = allSubBosses.filter(b =>
-    b['ボス種別'] === '道中' && String(b['出現日']).includes('2') && !b['フェーズ']
-  );
+  // R_夜の王_サブボスから出現日別にサブボスIDを収集
+  const day1Ids = [...new Set(allRelations.filter(r => String(r['出現日']) === '1').map(r => r['サブボスID']))];
+  const day2Ids = [...new Set(allRelations.filter(r => String(r['出現日']) === '2').map(r => r['サブボスID']))];
 
-  const mainDay1 = day1Bosses.filter(b => b['グループ'] === '夜ボス' || b['カテゴリ'] !== 'DLC');
-  const dlcDay1  = day1Bosses.filter(b => b['グループ'] !== '夜ボス' && b['カテゴリ'] === 'DLC');
-  const mainDay2 = day2Bosses.filter(b => b['グループ'] === '夜ボス' || b['カテゴリ'] !== 'DLC');
-  const dlcDay2  = day2Bosses.filter(b => b['グループ'] !== '夜ボス' && b['カテゴリ'] === 'DLC');
+  // IDからサブボスオブジェクトを取得（フェーズなし＝代表行のみ）
+  const getUniqueBosses = (ids) => ids
+    .map(id => allSubBosses.find(s => s['サブボスID'] === id && !s['フェーズ']))
+    .filter(Boolean);
+
+  const day1Bosses = getUniqueBosses(day1Ids);
+  const day2Bosses = getUniqueBosses(day2Ids);
+
+  // DLC判定：紐づく夜の王が全てDLCならDLC扱い
+  const isDlc = (sbId, day) => {
+    const linkedIds = allRelations
+      .filter(r => r['サブボスID'] === sbId && String(r['出現日']) === String(day))
+      .map(r => r['夜の王ID']);
+    return linkedIds.every(id => {
+      const nb = allNightBosses.find(n => n['ボスID'] === id);
+      return nb && nb['カテゴリ'] === 'DLC';
+    });
+  };
+
+  const mainDay1 = day1Bosses.filter(b => !isDlc(b['サブボスID'], 1));
+  const dlcDay1  = day1Bosses.filter(b =>  isDlc(b['サブボスID'], 1));
+  const mainDay2 = day2Bosses.filter(b => !isDlc(b['サブボスID'], 2));
+  const dlcDay2  = day2Bosses.filter(b =>  isDlc(b['サブボスID'], 2));
 
   document.getElementById('day1Btns').innerHTML = renderBossBtns(mainDay1, dlcDay1, 1);
   document.getElementById('day2Btns').innerHTML = renderBossBtns(mainDay2, dlcDay2, 2);
