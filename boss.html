@@ -28,13 +28,17 @@
       border-color: #8bc34a;
       transform: translateY(-2px);
     }
+    .boss-card.active-card {
+      border-color: #8bc34a;
+      box-shadow: 0 0 0 2px rgba(139,195,74,0.3);
+    }
     .boss-card h3 {
       font-size: 0.95em;
       color: #f0f0f0;
       margin-bottom: 8px;
     }
 
-    /* 耐性バー */
+    /* 耐性チップ */
     .resist-row {
       display: flex;
       flex-wrap: wrap;
@@ -47,13 +51,39 @@
       font-size: 0.78em;
       font-weight: bold;
     }
-    .chip-great  { background: #4a1e1e; color: #ff6b6b; border: 1px solid #8a3a3a; }
+    .chip-great  { background: #2d1052; color: #f5ff30; border: 1px solid #7c3aed; } /* ◎ 弱点：紫＋蛍光黄 */
     .chip-good   { background: #2e4a1e; color: #8bc34a; border: 1px solid #5a8a3a; }
     .chip-normal { background: #2a2a2a; color: #aaa;    border: 1px solid #444; }
     .chip-weak   { background: #1a1a1a; color: #555;    border: 1px solid #333; }
     .chip-immune { background: #111;    color: #333;    border: 1px solid #222; }
 
-    /* ボス詳細モーダル */
+    /* ボス詳細インラインパネル */
+    .boss-detail-panel {
+      background: #2a2a2a;
+      border: 1px solid #8bc34a;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 16px;
+      position: relative;
+      animation: slideDown 0.2s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .detail-close-btn {
+      position: absolute;
+      top: 12px; right: 16px;
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 1.4em;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .detail-close-btn:hover { color: #f88; }
+
+    /* サブボス詳細モーダル */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -203,7 +233,6 @@
 
 <div class="container">
 
-  <!-- ローディング -->
   <div id="loading" class="loading">データを読み込んでいます</div>
   <div id="errorMsg" class="error-msg hidden"></div>
 
@@ -218,6 +247,12 @@
       </div>
     </div>
     <div class="boss-grid" id="nightBossGrid"></div>
+
+    <!-- インライン詳細パネル（カードグリッドの直下） -->
+    <div id="nightBossDetail" class="boss-detail-panel hidden">
+      <button class="detail-close-btn" onclick="closeDetail()">×</button>
+      <div id="nightBossDetailBody"></div>
+    </div>
   </div>
 
   <!-- タブ2：3日目絞り込み -->
@@ -232,7 +267,6 @@
         <div class="boss-btn-grid" id="day2Btns"></div>
       </div>
     </div>
-
     <div class="card">
       <div class="section-title">絞り込み結果</div>
       <div id="candidateCount" class="score-badge">候補: 0</div>
@@ -240,7 +274,6 @@
         <li class="no-result">ボスを選択してください</li>
       </ul>
     </div>
-
     <div style="text-align:right; margin-top:8px;">
       <button class="btn btn-danger" onclick="resetNarrow()">リセット</button>
     </div>
@@ -257,7 +290,7 @@
 
 </div>
 
-<!-- ボス詳細モーダル -->
+<!-- サブボス詳細モーダル（道中ボスチップからのみ使用） -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
   <div class="modal" id="modalContent">
     <button class="modal-close" onclick="closeModalBtn()">×</button>
@@ -268,28 +301,26 @@
 <script src="js/api.js"></script>
 <script src="js/boss.js"></script>
 <script>
-  // URLハッシュでタブ切り替え
   window.addEventListener('load', async function() {
     try {
       await initDB();
       document.getElementById('loading').classList.add('hidden');
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('hidden'));
       initBossPage();
-
       const hash = location.hash.replace('#','');
       if (hash === 'field' || hash === 'narrow') {
         switchTab(hash);
       }
     } catch(e) {
-  document.getElementById('loading').classList.add('hidden');
-  if (e.message === 'TOKEN_NOT_SET' || e.message === 'TOKEN_INVALID') {
-    location.href = 'index.html';
-    return;
-  }
-  const err = document.getElementById('errorMsg');
-  err.textContent = '❌ データ読み込みに失敗しました: ' + e.message;
-  err.classList.remove('hidden');
-}
+      document.getElementById('loading').classList.add('hidden');
+      if (e.message === 'TOKEN_NOT_SET' || e.message === 'TOKEN_INVALID') {
+        location.href = 'index.html';
+        return;
+      }
+      const err = document.getElementById('errorMsg');
+      err.textContent = '❌ データ読み込みに失敗しました: ' + e.message;
+      err.classList.remove('hidden');
+    }
   });
 </script>
 </body>
