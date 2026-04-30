@@ -79,11 +79,44 @@
       color: #f88;
       border-color: #8a3a3a;
     }
+
+    /* 接続ボタン */
+    #connectBtn {
+      width: 100%;
+      padding: 10px;
+      background: #8bc34a;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    #connectBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* スピナー */
+    .spinner {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(26,26,26,0.3);
+      border-top-color: #1a1a1a;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
 
-<!-- ★ここから追加 -->
 <div id="authScreen" style="display:none; position:fixed; inset:0; background:#212121; z-index:999; display:flex; align-items:center; justify-content:center;">
   <div style="background:#2a2a2a; border:1px solid #8bc34a; border-radius:12px; padding:32px; max-width:360px; width:90%; text-align:center;">
     <div style="font-size:1.8em; margin-bottom:12px;">⚔</div>
@@ -96,18 +129,11 @@
       style="width:100%; padding:10px; background:#1a1a1a; border:1px solid #444; border-radius:6px; color:#e0e0e0; font-size:1em; text-align:center; margin-bottom:12px;"
       placeholder="トークンを入力..."
       onkeydown="if(event.key==='Enter') submitToken()">
-    <button onclick="submitToken()"
-      style="width:100%; padding:10px; background:#8bc34a; color:#1a1a1a; border:none; border-radius:6px; font-size:1em; font-weight:bold; cursor:pointer;">
-      接続
-    </button>
+    <button id="connectBtn" onclick="submitToken()">接続</button>
     <div id="authError" style="color:#f88; font-size:0.85em; margin-top:8px;"></div>
   </div>
 </div>
-<!-- ★ここまで追加 -->
 
-<header>
-
-  
 <header>
   <div class="header-inner">
     <span class="site-title">⚔ NIGHTREIGN TOOL</span>
@@ -156,6 +182,17 @@
     document.getElementById('authScreen').style.display = 'none';
   }
 
+  function setConnectBtnLoading(isLoading) {
+    const btn = document.getElementById('connectBtn');
+    if (isLoading) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>接続中...';
+    } else {
+      btn.disabled = false;
+      btn.innerHTML = '接続';
+    }
+  }
+
   async function submitToken() {
     const apiUrl = document.getElementById('apiUrlInput').value.trim();
     const token  = document.getElementById('tokenInput').value.trim();
@@ -167,6 +204,7 @@
 
     setCredentials(apiUrl, token);
     document.getElementById('authError').textContent = '';
+    setConnectBtnLoading(true);
 
     try {
       DB = null; // キャッシュクリア
@@ -177,6 +215,8 @@
       } else {
         document.getElementById('authError').textContent = 'エラー: ' + e.message;
       }
+    } finally {
+      setConnectBtnLoading(false);
     }
   }
 
