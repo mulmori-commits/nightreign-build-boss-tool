@@ -21,10 +21,10 @@ function resistLabel(symbol) {
   }
 }
 
-const ATTR_LABELS  = ['標準','打撃','斬撃','刺突','魔力','炎','雷','聖'];
-const AILMENT_LABELS = ['血','毒','腐','冷','眠','狂'];
-const ATTR_KEYS    = ['標準','打撃','斬撃','刺突','魔力','炎','雷','聖'];
-const AILMENT_KEYS = ['血','毒','腐','冷','眠','狂'];
+const ATTR_LABELS    = ['物理','打撃','斬撃','刺突','魔力','炎','雷','聖'];
+const AILMENT_LABELS = ['出血','毒','腐敗','凍傷','睡眠','発狂'];
+const ATTR_KEYS      = ['物理耐性','打撃耐性','斬撃耐性','刺突耐性','魔力耐性','炎耐性','雷耐性','聖耐性'];
+const AILMENT_KEYS   = ['出血耐性','毒耐性','腐敗耐性','凍傷耐性','睡眠耐性','発狂耐性'];
 
 // ===== 耐性チップ生成 =====
 function buildResistChips(boss, keys, labels) {
