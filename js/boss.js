@@ -176,10 +176,15 @@ function showNightBossDetail(name) {
   const panel = document.getElementById('nightBossDetail');
   panel.classList.remove('hidden');
 
-  // 選択中カードをハイライト
-  document.querySelectorAll('.boss-card').forEach(c => {
-    c.classList.toggle('active-card', c.dataset.name === name);
-  });
+  // 同じカードをクリックしたら閉じる、別カードなら切り替え
+const isSame = document.querySelector(`.boss-card[data-name="${name}"]`)?.classList.contains('active-card');
+if (isSame) {
+  closeDetail();
+  return;
+}
+document.querySelectorAll('.boss-card').forEach(c => {
+  c.classList.toggle('active-card', c.dataset.name === name);
+});
 
   // パネルへスクロール（ヘッダー分オフセット）
   setTimeout(() => {
