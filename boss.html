@@ -128,9 +128,13 @@
       align-items: flex-start;
     }
     .narrow-day-col {
-      flex: 2;
-      min-width: 0;
-    }
+  flex: 2;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-items: start;
+}
     .narrow-result-col {
       flex: 1;
       position: sticky;
