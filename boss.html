@@ -122,19 +122,29 @@
     }
 
     /* 絞り込みツール */
-    .selector-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 16px;
+    .narrow-container {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
     }
-    @media (max-width: 600px) {
-      .selector-grid { grid-template-columns: 1fr; }
+    .narrow-day-col {
+      flex: 2;
+      min-width: 0;
+    }
+    .narrow-result-col {
+      flex: 1;
+      position: sticky;
+      top: 70px;
+    }
+    @media (max-width: 900px) {
+      .narrow-container { flex-wrap: wrap; }
+      .narrow-result-col { flex: 1 1 100%; position: static; }
     }
     .day-section {
       background: #2a2a2a;
       border-radius: 10px;
       padding: 12px;
+      margin-bottom: 12px;
     }
     .boss-btn-grid {
       display: flex;
@@ -143,21 +153,28 @@
       margin-top: 8px;
     }
     .boss-select-btn {
-      padding: 5px 10px;
+      flex: 0 0 calc(50% - 3px);
+      min-height: 44px;
+      padding: 8px 10px;
       background: #3e3e3e;
       border: 1px solid #4a4a4a;
       border-radius: 6px;
       color: #e0e0e0;
-      font-size: 0.85em;
+      font-size: 0.95em;
       cursor: pointer;
       transition: all 0.2s;
       user-select: none;
+      text-align: center;
+    }
+    .boss-select-btn:hover {
+      border-color: #8bc34a;
     }
     .boss-select-btn.selected {
       background: #8bc34a;
       color: #1a1a1a;
       border-color: #689f38;
       font-weight: bold;
+      box-shadow: 0 0 10px rgba(139,195,74,0.4);
     }
     .dlc-divider {
       width: 100%;
@@ -172,12 +189,16 @@
       margin-bottom: 6px;
       padding: 10px 14px;
       border-radius: 6px;
-      border-left: 4px solid #8bc34a;
       font-size: 0.95em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .result-list li:hover {
+      background: #3a3a3a;
     }
     .result-list li.no-result {
-      border-left-color: #666;
       color: #888;
+      cursor: default;
     }
     .score-badge {
       display: inline-block;
@@ -246,36 +267,40 @@
         <button class="filter-btn" onclick="filterNight('DLC', this)">DLC</button>
       </div>
     </div>
-  <!-- インライン詳細パネル（フィルターとグリッドの間） -->
+    <div class="boss-grid" id="nightBossGrid"></div>
+
+    <!-- インライン詳細パネル（カードグリッドの直下） -->
     <div id="nightBossDetail" class="boss-detail-panel hidden">
       <button class="detail-close-btn" onclick="closeDetail()">×</button>
       <div id="nightBossDetailBody"></div>
     </div>
-
-    <div class="boss-grid" id="nightBossGrid"></div>
   </div>
 
   <!-- タブ2：3日目絞り込み -->
   <div id="tab-narrow" class="tab-content hidden">
-    <div class="selector-grid">
-      <div class="day-section">
-        <div class="section-title">1日目ボス</div>
-        <div class="boss-btn-grid" id="day1Btns"></div>
+    <div class="narrow-container">
+      <div class="narrow-day-col">
+        <div class="day-section">
+          <div class="section-title">1日目ボス</div>
+          <div class="boss-btn-grid" id="day1Btns"></div>
+        </div>
+        <div class="day-section">
+          <div class="section-title">2日目ボス</div>
+          <div class="boss-btn-grid" id="day2Btns"></div>
+        </div>
       </div>
-      <div class="day-section">
-        <div class="section-title">2日目ボス</div>
-        <div class="boss-btn-grid" id="day2Btns"></div>
+      <div class="narrow-result-col">
+        <div class="card">
+          <div class="section-title">絞り込み結果</div>
+          <div id="candidateCount" class="score-badge">候補: 10</div>
+          <ul id="candidateList" class="result-list">
+            <li class="no-result">ボスを選択してください</li>
+          </ul>
+        </div>
+        <div style="text-align:right; margin-top:8px;">
+          <button class="btn btn-danger" onclick="resetNarrow()">リセット</button>
+        </div>
       </div>
-    </div>
-    <div class="card">
-      <div class="section-title">絞り込み結果</div>
-      <div id="candidateCount" class="score-badge">候補: 0</div>
-      <ul id="candidateList" class="result-list">
-        <li class="no-result">ボスを選択してください</li>
-      </ul>
-    </div>
-    <div style="text-align:right; margin-top:8px;">
-      <button class="btn btn-danger" onclick="resetNarrow()">リセット</button>
     </div>
   </div>
 
