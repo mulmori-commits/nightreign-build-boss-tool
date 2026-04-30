@@ -281,11 +281,15 @@
         switchTab(hash);
       }
     } catch(e) {
-      document.getElementById('loading').classList.add('hidden');
-      const err = document.getElementById('errorMsg');
-      err.textContent = '❌ データ読み込みに失敗しました: ' + e.message;
-      err.classList.remove('hidden');
-    }
+  document.getElementById('loading').classList.add('hidden');
+  if (e.message === 'TOKEN_NOT_SET' || e.message === 'TOKEN_INVALID') {
+    location.href = 'index.html';
+    return;
+  }
+  const err = document.getElementById('errorMsg');
+  err.textContent = '❌ データ読み込みに失敗しました: ' + e.message;
+  err.classList.remove('hidden');
+}
   });
 </script>
 </body>
