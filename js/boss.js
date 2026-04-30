@@ -10,9 +10,9 @@ function resistClass(symbol) {
   }
 }
 
-const ATTR_LABELS = ['物理','打撃','斬撃','刺突','魔力','炎','雷','聖'];
+const ATTR_LABELS    = ['物理','打撃','斬撃','刺突','魔力','炎','雷','聖'];
 const AILMENT_LABELS = ['出血','毒','腐敗','凍傷','睡眠','発狂'];
-const ATTR_KEYS   = ['物理耐性','打撃耐性','斬撃耐性','刺突耐性','魔力耐性','炎耐性','雷耐性','聖耐性'];
+const ATTR_KEYS      = ['物理耐性','打撃耐性','斬撃耐性','刺突耐性','魔力耐性','炎耐性','雷耐性','聖耐性'];
 const AILMENT_KEYS   = ['出血耐性','毒耐性','腐敗耐性','凍傷耐性','睡眠耐性','発狂耐性'];
 
 // ===== 耐性チップ生成 =====
@@ -171,20 +171,22 @@ function showNightBossDetail(name) {
     }
   }
 
+  // 同じカードをクリックしたら閉じる
+  const isSame = document.querySelector(`.boss-card[data-name="${name.replace(/"/g,'&quot;')}"]`)?.classList.contains('active-card');
+  if (isSame) {
+    closeDetail();
+    return;
+  }
+
   // パネルに表示
   document.getElementById('nightBossDetailBody').innerHTML = html;
   const panel = document.getElementById('nightBossDetail');
   panel.classList.remove('hidden');
 
-  // 同じカードをクリックしたら閉じる、別カードなら切り替え
-const isSame = document.querySelector(`.boss-card[data-name="${name}"]`)?.classList.contains('active-card');
-if (isSame) {
-  closeDetail();
-  return;
-}
-document.querySelectorAll('.boss-card').forEach(c => {
-  c.classList.toggle('active-card', c.dataset.name === name);
-});
+  // 選択中カードをハイライト
+  document.querySelectorAll('.boss-card').forEach(c => {
+    c.classList.toggle('active-card', c.dataset.name === name);
+  });
 
   // パネルへスクロール（ヘッダー分オフセット）
   setTimeout(() => {
@@ -230,29 +232,28 @@ function renderNarrowTool() {
   const day1Ids = [...new Set(allRelations.filter(r => String(r['出現日']) === '1').map(r => r['サブボスID']))];
   const day2Ids = [...new Set(allRelations.filter(r => String(r['出現日']) === '2').map(r => r['サブボスID']))];
 
-  // IDからサブボスオブジェクトを取得（フェーズなし＝代表行のみ）
+  // IDからサブボスオブジェクトを取得（道中ボス・フェーズなし代表行のみ）
   const getUniqueBosses = (ids) => ids
     .map(id => allSubBosses.find(s => s['サブボスID'] === id && !s['フェーズ']))
-    .filter(Boolean);
+    .filter(b => b && b['ボス種別'] === '道中');
 
   const day1Bosses = getUniqueBosses(day1Ids);
   const day2Bosses = getUniqueBosses(day2Ids);
 
-  // DLC判定：紐づく夜の王が全てDLCならDLC扱い
-  const isDlc = (sbId, day) => {
-    const linkedIds = allRelations
-      .filter(r => r['サブボスID'] === sbId && String(r['出現日']) === String(day))
-      .map(r => r['夜の王ID']);
-    return linkedIds.every(id => {
-      const nb = allNightBosses.find(n => n['ボスID'] === id);
-      return nb && nb['カテゴリ'] === 'DLC';
-    });
-  };
+  // DLC専用サブボスID（DLC夜の王にのみ紐づくもの）
+  const dlcBossIds = new Set(
+    allNightBosses.filter(n => n['カテゴリ'] === 'DLC').map(n => n['ボスID'])
+  );
+  const dlcOnlySubIds = new Set(
+    [...new Set(allRelations.filter(r => dlcBossIds.has(r['夜の王ID'])).map(r => r['サブボスID']))]
+      .filter(sbId => !allRelations.some(r => r['サブボスID'] === sbId && !dlcBossIds.has(r['夜の王ID'])))
+  );
+  const isDlc = (sbId) => dlcOnlySubIds.has(sbId);
 
-  const mainDay1 = day1Bosses.filter(b => !isDlc(b['サブボスID'], 1));
-  const dlcDay1  = day1Bosses.filter(b =>  isDlc(b['サブボスID'], 1));
-  const mainDay2 = day2Bosses.filter(b => !isDlc(b['サブボスID'], 2));
-  const dlcDay2  = day2Bosses.filter(b =>  isDlc(b['サブボスID'], 2));
+  const mainDay1 = day1Bosses.filter(b => !isDlc(b['サブボスID']));
+  const dlcDay1  = day1Bosses.filter(b =>  isDlc(b['サブボスID']));
+  const mainDay2 = day2Bosses.filter(b => !isDlc(b['サブボスID']));
+  const dlcDay2  = day2Bosses.filter(b =>  isDlc(b['サブボスID']));
 
   document.getElementById('day1Btns').innerHTML = renderBossBtns(mainDay1, dlcDay1, 1);
   document.getElementById('day2Btns').innerHTML = renderBossBtns(mainDay2, dlcDay2, 2);
