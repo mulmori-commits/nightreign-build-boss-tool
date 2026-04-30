@@ -128,13 +128,9 @@
       align-items: flex-start;
     }
     .narrow-day-col {
-  flex: 2;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  align-items: start;
-}
+      flex: 2;
+      min-width: 0;
+    }
     .narrow-result-col {
       flex: 1;
       position: sticky;
@@ -271,13 +267,13 @@
         <button class="filter-btn" onclick="filterNight('DLC', this)">DLC</button>
       </div>
     </div>
-    <div class="boss-grid" id="nightBossGrid"></div>
-
-    <!-- インライン詳細パネル（カードグリッドの直下） -->
+    <!-- インライン詳細パネル（フィルターとグリッドの間） -->
     <div id="nightBossDetail" class="boss-detail-panel hidden">
       <button class="detail-close-btn" onclick="closeDetail()">×</button>
       <div id="nightBossDetailBody"></div>
     </div>
+
+    <div class="boss-grid" id="nightBossGrid"></div>
   </div>
 
   <!-- タブ2：3日目絞り込み -->
