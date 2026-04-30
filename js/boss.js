@@ -106,6 +106,13 @@ function renderNightBosses() {
 
 // ===== 夜の王詳細（インラインパネル） =====
 function showNightBossDetail(name) {
+  // 同じカードをクリックしたら閉じる
+  const isSame = document.querySelector(`.boss-card[data-name="${name.replace(/"/g,'&quot;')}"]`)?.classList.contains('active-card');
+  if (isSame) {
+    closeDetail();
+    return;
+  }
+
   const phases = allNightBosses.filter(b => b['名前'] === name);
   if (!phases.length) return;
 
@@ -128,7 +135,6 @@ function showNightBossDetail(name) {
     ${name} <span class="badge badge-${cat.toLowerCase()}">${cat}</span>
   </h2>`;
 
-  // フェーズごとの耐性テーブル
   phases.forEach(phase => {
     const phaseLabel = phase['フェーズ']
       ? `<div class="text-small text-muted" style="margin-bottom:4px;">（${phase['フェーズ']}）</div>`
@@ -146,7 +152,6 @@ function showNightBossDetail(name) {
     html += `<div class="card" style="margin-bottom:10px;">📝 ${first['備考']}</div>`;
   }
 
-  // 道中ボス
   if (day1.length || day2.length) {
     html += `<div class="section-title" style="margin-top:12px;">道中ボス候補</div>`;
     if (day1.length) {
@@ -171,24 +176,14 @@ function showNightBossDetail(name) {
     }
   }
 
-  // 同じカードをクリックしたら閉じる
-  const isSame = document.querySelector(`.boss-card[data-name="${name.replace(/"/g,'&quot;')}"]`)?.classList.contains('active-card');
-  if (isSame) {
-    closeDetail();
-    return;
-  }
-
-  // パネルに表示
   document.getElementById('nightBossDetailBody').innerHTML = html;
   const panel = document.getElementById('nightBossDetail');
   panel.classList.remove('hidden');
 
-  // 選択中カードをハイライト
   document.querySelectorAll('.boss-card').forEach(c => {
     c.classList.toggle('active-card', c.dataset.name === name);
   });
 
-  // パネルへスクロール（ヘッダー分オフセット）
   setTimeout(() => {
     const top = panel.getBoundingClientRect().top + window.scrollY - 80;
     window.scrollTo({ top, behavior: 'smooth' });
@@ -227,51 +222,89 @@ function showSubBossDetail(name) {
 let selected1 = null;
 let selected2 = null;
 
+// 旧ツールのBOSS_DATAをそのまま使用（略称で管理）
+const NARROW_BOSS_DATA = {
+  'グラディウス': { day1: ['亜人', '鈴玉狩り'], day2: ['忌み鬼', 'ツリガ'] },
+  'エデレ': {
+    day1: ['貪食ドラゴン', 'ミミズ顔', '英雄のガーゴイル', 'フレイディア', '夜騎兵'],
+    day2: ['古竜', '坩堝＆カバ', '僻地の宿将'],
+  },
+  'グノスター': {
+    day1: ['熔鉄デーモン', '戦場の宿将', '百足のデーモン', 'ティビアの呼び舟', '爛れた樹霊'],
+    day2: ['大土竜', '竜人兵', '竜ツリ'],
+  },
+  'マリス': {
+    day1: ['貪食ドラゴン', 'ミミズ顔', '英雄のガーゴイル', '熔鉄デーモン', '接ぎ木の君主'],
+    day2: ['ツリガ', '降る星の成獣', '神肌のふたり'],
+  },
+  'リブラ': {
+    day1: ['フレイディア', '戦場の宿将', '百足のデーモン', 'ティビアの呼び舟', '幽鬼'],
+    day2: ['坩堝＆カバ', '神肌のふたり', '死儀礼の鳥'],
+  },
+  'フルゴール': {
+    day1: ['貪食ドラゴン', 'ミミズ顔', '夜騎兵', '戦場の宿将', '百足のデーモン', '幽鬼'],
+    day2: ['僻地の宿将', '竜人兵', '無名の王'],
+  },
+  'カリゴ': {
+    day1: ['フレイディア', '熔鉄デーモン', 'ティビアの呼び舟', '爛れた樹霊', '接ぎ木の君主'],
+    day2: ['竜ツリ', '神肌のふたり', '踊り子'],
+  },
+  'ナメレス': {
+    day1: ['亜人', '鈴玉狩り', '貪食ドラゴン', 'ミミズ顔', '英雄のガーゴイル', 'フレイディア', '夜騎兵', '熔鉄デーモン', '戦場の宿将', '百足のデーモン', 'ティビアの呼び舟', '爛れた樹霊', '接ぎ木の君主', '幽鬼'],
+    day2: ['忌み鬼', 'ツリガ', '古竜', '坩堝＆カバ', '僻地の宿将', '大土竜', '竜人兵', '竜ツリ', '降る星の成獣', '神肌のふたり', '死儀礼の鳥', '無名の王', '踊り子'],
+  },
+  'ハルモニア': {
+    day1: ['傷＆うろ底', '呪剣士＆神獣'],
+    day2: ['デーモンの王子', '血の君主'],
+  },
+  'ストラゲス': {
+    day1: ['大赤熊', '死の騎士'],
+    day2: ['獅子舞', 'アルトリウス'],
+  },
+};
+
+// 略称→夜の王正式名のマップ（詳細パネル表示用）
+const NARROW_NIGHT_NAME = {
+  'グラディウス': '夜の獣、グラディウス',
+  'エデレ':       '夜の爵、エデレ',
+  'グノスター':   '夜の識、グノスター',
+  'マリス':       '深海の夜、マリス',
+  'リブラ':       '夜の魔、リブラ',
+  'フルゴール':   '夜光の騎士、フルゴール',
+  'カリゴ':       '夜の霞、カリゴ',
+  'ナメレス':     '夜の王、ナメレス',
+  'ハルモニア':   '英雄武器の娘たち、ハルモニア',
+  'ストラゲス':   '反逆のストラゲス',
+};
+
+const NARROW_GROUPS_DAY1 = {
+  main: ['亜人', '英雄のガーゴイル', '鈴玉狩り', '戦場の宿将', '爛れた樹霊', '接ぎ木の君主', 'ティビアの呼び舟', '貪食ドラゴン', 'フレイディア', 'ミミズ顔', '百足のデーモン', '夜騎兵', '幽鬼', '熔鉄デーモン'],
+  dlc:  ['傷＆うろ底', '呪剣士＆神獣', '大赤熊', '死の騎士'],
+};
+const NARROW_GROUPS_DAY2 = {
+  main: ['忌み鬼', '踊り子', '大土竜', '神肌のふたり', '古竜', '死儀礼の鳥', '僻地の宿将', 'ツリガ', '降る星の成獣', '無名の王', '坩堝＆カバ', '竜人兵', '竜ツリ'],
+  dlc:  ['デーモンの王子', '血の君主', '獅子舞', 'アルトリウス'],
+};
+
 function renderNarrowTool() {
-  // R_夜の王_サブボスから出現日別にサブボスIDを収集
-  const day1Ids = [...new Set(allRelations.filter(r => String(r['出現日']) === '1').map(r => r['サブボスID']))];
-  const day2Ids = [...new Set(allRelations.filter(r => String(r['出現日']) === '2').map(r => r['サブボスID']))];
-
-  // IDからサブボスオブジェクトを取得（道中ボス・フェーズなし代表行のみ）
-  const getUniqueBosses = (ids) => ids
-    .map(id => allSubBosses.find(s => s['サブボスID'] === id && !s['フェーズ']))
-    .filter(b => b && b['ボス種別'] === '道中');
-
-  const day1Bosses = getUniqueBosses(day1Ids);
-  const day2Bosses = getUniqueBosses(day2Ids);
-
-  // DLC専用サブボスID（DLC夜の王にのみ紐づくもの）
-  const dlcBossIds = new Set(
-    allNightBosses.filter(n => n['カテゴリ'] === 'DLC').map(n => n['ボスID'])
-  );
-  const dlcOnlySubIds = new Set(
-    [...new Set(allRelations.filter(r => dlcBossIds.has(r['夜の王ID'])).map(r => r['サブボスID']))]
-      .filter(sbId => !allRelations.some(r => r['サブボスID'] === sbId && !dlcBossIds.has(r['夜の王ID'])))
-  );
-  const isDlc = (sbId) => dlcOnlySubIds.has(sbId);
-
-  const mainDay1 = day1Bosses.filter(b => !isDlc(b['サブボスID']));
-  const dlcDay1  = day1Bosses.filter(b =>  isDlc(b['サブボスID']));
-  const mainDay2 = day2Bosses.filter(b => !isDlc(b['サブボスID']));
-  const dlcDay2  = day2Bosses.filter(b =>  isDlc(b['サブボスID']));
-
-  document.getElementById('day1Btns').innerHTML = renderBossBtns(mainDay1, dlcDay1, 1);
-  document.getElementById('day2Btns').innerHTML = renderBossBtns(mainDay2, dlcDay2, 2);
-}
-
-function renderBossBtns(main, dlc, day) {
-  let html = main.map(b =>
-    `<button class="boss-select-btn" data-name="${b['名前']}" data-day="${day}"
-      onclick="selectBoss(this, ${day})">${b['名前']}</button>`
+  const day1Html = NARROW_GROUPS_DAY1.main.map(name =>
+    `<button class="boss-select-btn" data-name="${name}" onclick="selectBoss(this, 1)">${name}</button>`
+  ).join('') +
+  `<div class="dlc-divider"></div>` +
+  NARROW_GROUPS_DAY1.dlc.map(name =>
+    `<button class="boss-select-btn" data-name="${name}" onclick="selectBoss(this, 1)">${name}</button>`
   ).join('');
-  if (dlc.length) {
-    html += `<div class="dlc-divider"></div>`;
-    html += dlc.map(b =>
-      `<button class="boss-select-btn" data-name="${b['名前']}" data-day="${day}"
-        onclick="selectBoss(this, ${day})">${b['名前']}</button>`
-    ).join('');
-  }
-  return html;
+
+  const day2Html = NARROW_GROUPS_DAY2.main.map(name =>
+    `<button class="boss-select-btn" data-name="${name}" onclick="selectBoss(this, 2)">${name}</button>`
+  ).join('') +
+  `<div class="dlc-divider"></div>` +
+  NARROW_GROUPS_DAY2.dlc.map(name =>
+    `<button class="boss-select-btn" data-name="${name}" onclick="selectBoss(this, 2)">${name}</button>`
+  ).join('');
+
+  document.getElementById('day1Btns').innerHTML = day1Html;
+  document.getElementById('day2Btns').innerHTML = day2Html;
 }
 
 function selectBoss(btn, day) {
@@ -302,36 +335,23 @@ function updateCandidates() {
   const list  = document.getElementById('candidateList');
   const badge = document.getElementById('candidateCount');
 
-  const nightBossNames = [...new Set(allNightBosses.map(b => b['名前']))];
-
-  const results = nightBossNames.filter(name => {
-    const phases = allNightBosses.filter(b => b['名前'] === name);
-    const bossIds = phases.map(p => p['ボスID']);
-    const rels = allRelations.filter(r => bossIds.includes(r['夜の王ID']));
-
-    if (selected1) {
-      const sb = allSubBosses.find(s => s['名前'] === selected1);
-      if (!sb) return false;
-      const match = rels.some(r => r['サブボスID'] === sb['サブボスID'] && String(r['出現日']) === '1');
-      if (!match) return false;
-    }
-    if (selected2) {
-      const sb = allSubBosses.find(s => s['名前'] === selected2);
-      if (!sb) return false;
-      const match = rels.some(r => r['サブボスID'] === sb['サブボスID'] && String(r['出現日']) === '2');
-      if (!match) return false;
-    }
-    return true;
-  });
+  let results = [];
+  for (const [shortName, data] of Object.entries(NARROW_BOSS_DATA)) {
+    let ok = true;
+    if (selected1 && !data.day1.includes(selected1)) ok = false;
+    if (selected2 && !data.day2.includes(selected2)) ok = false;
+    if (ok) results.push(shortName);
+  }
 
   badge.textContent = `候補: ${results.length}`;
   if (results.length === 0) {
     list.innerHTML = '<li class="no-result">条件に一致するボスはいません</li>';
   } else {
-    list.innerHTML = results.map(name =>
-      `<li onclick="showNightBossDetail('${name.replace(/'/g,"\\'")}'); switchTab('night');"
-        style="cursor:pointer;">${name}</li>`
-    ).join('');
+    list.innerHTML = results.map(shortName => {
+      const fullName = NARROW_NIGHT_NAME[shortName] || shortName;
+      return `<li onclick="showNightBossDetail('${fullName.replace(/'/g,"\\'")}'); switchTab('night');"
+        style="cursor:pointer;">${shortName}</li>`;
+    }).join('');
   }
 }
 
@@ -379,7 +399,6 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  // イベント経由の場合のみボタンをハイライト
   if (event && event.target) event.target.classList.add('active');
   location.hash = tab === 'night' ? '' : tab;
 }
