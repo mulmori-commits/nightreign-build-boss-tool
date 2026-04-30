@@ -1,21 +1,37 @@
-function getToken() {
-  const params = new URLSearchParams(location.search);
-  return params.get('token') || (window._NR_TOKEN || '');
+const STORAGE_KEY_TOKEN = 'nr_token';
+const STORAGE_KEY_URL   = 'nr_api_url';
+
+function getToken()  { return localStorage.getItem(STORAGE_KEY_TOKEN) || ''; }
+function getApiUrl() { return localStorage.getItem(STORAGE_KEY_URL)   || ''; }
+
+function setCredentials(url, token) {
+  localStorage.setItem(STORAGE_KEY_URL,   url);
+  localStorage.setItem(STORAGE_KEY_TOKEN, token);
 }
 
-function getApiUrl() {
-  return window._NR_API_URL || '';
+function clearCredentials() {
+  localStorage.removeItem(STORAGE_KEY_TOKEN);
+  localStorage.removeItem(STORAGE_KEY_URL);
 }
 
 const API = {
   async fetchAll() {
-    const token = getToken();
+    const token  = getToken();
     const apiUrl = getApiUrl();
-    if (!token || !apiUrl) throw new Error('configが未設定です。');
-    const url = `${apiUrl}?token=${token}&action=getAllData`;
-    const res = await fetch(url);
+    if (!token || !apiUrl) throw new Error('TOKEN_NOT_SET');
+
+    const res = await fetch(apiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, action: 'getAllData' })
+    });
+
     if (!res.ok) throw new Error('API通信エラー');
     const data = await res.json();
+    if (data.error === 'Unauthorized') {
+      clearCredentials();
+      throw new Error('TOKEN_INVALID');
+    }
     if (data.error) throw new Error(data.error);
     return data;
   }
