@@ -20,3 +20,27 @@ document.addEventListener('click', function(e) {
     document.getElementById('navMenuBtn')?.classList.remove('open');
   }
 });
+
+// ===== データ再読み込み =====
+async function reloadDB() {
+  const btn = document.getElementById('reloadBtn');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = '⟳';
+  btn.style.animation = 'spin 0.8s linear infinite';
+
+  clearDBCache();
+  try {
+    await initDB();
+    btn.style.animation = '';
+    btn.textContent = '↺';
+    btn.disabled = false;
+    // ページを再初期化
+    if (typeof initBossPage  === 'function') initBossPage();
+    if (typeof initBuildPage === 'function') initBuildPage();
+  } catch(e) {
+    btn.style.animation = '';
+    btn.textContent = '↺';
+    btn.disabled = false;
+  }
+}
