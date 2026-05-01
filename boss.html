@@ -128,13 +128,9 @@
       align-items: flex-start;
     }
     .narrow-day-col {
-  flex: 2;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  align-items: start;
-}
+      flex: 2;
+      min-width: 0;
+    }
     .narrow-result-col {
       flex: 1;
       position: sticky;
@@ -312,6 +308,31 @@
   <div id="tab-field" class="tab-content hidden">
     <div class="card">
       <div class="section-title">フィールドボス辞書</div>
+      <!-- 種別フィルター -->
+      <div class="filter-group" id="fieldTypeFilter" style="margin-bottom:10px;">
+        <button class="filter-btn active" onclick="setFieldType('all', this)">全て</button>
+        <button class="filter-btn" onclick="setFieldType('フィールド', this)">フィールド</button>
+        <button class="filter-btn" onclick="setFieldType('地変', this)">地変</button>
+        <button class="filter-btn" onclick="setFieldType('拠点', this)">拠点</button>
+        <button class="filter-btn" onclick="setFieldType('大空洞', this)">大空洞</button>
+        <button class="filter-btn" onclick="setFieldType('封牢', this)">封牢</button>
+        <button class="filter-btn" onclick="setFieldType('襲撃', this)">襲撃</button>
+      </div>
+      <!-- 五十音フィルター -->
+      <div class="filter-group" id="fieldKanaFilter" style="margin-bottom:10px;">
+        <button class="filter-btn active" onclick="setFieldKana('all', this)">全て</button>
+        <button class="filter-btn" onclick="setFieldKana('あ', this)">あ</button>
+        <button class="filter-btn" onclick="setFieldKana('か', this)">か</button>
+        <button class="filter-btn" onclick="setFieldKana('さ', this)">さ</button>
+        <button class="filter-btn" onclick="setFieldKana('た', this)">た</button>
+        <button class="filter-btn" onclick="setFieldKana('な', this)">な</button>
+        <button class="filter-btn" onclick="setFieldKana('は', this)">は</button>
+        <button class="filter-btn" onclick="setFieldKana('ま', this)">ま</button>
+        <button class="filter-btn" onclick="setFieldKana('や', this)">や</button>
+        <button class="filter-btn" onclick="setFieldKana('ら', this)">ら</button>
+        <button class="filter-btn" onclick="setFieldKana('わ', this)">わ</button>
+      </div>
+      <!-- テキスト検索 -->
       <input type="text" class="search-box" id="fieldSearch" placeholder="ボス名で検索..." oninput="filterField()">
     </div>
     <div class="field-list" id="fieldList"></div>
