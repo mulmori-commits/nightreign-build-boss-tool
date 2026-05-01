@@ -313,16 +313,18 @@ function closeBuildDetail() {
 function togglePool(buildId) {
   if (buildPool.includes(buildId)) {
     buildPool = buildPool.filter(id => id !== buildId);
+    renderPool();
+    // 削除時はパネルのボタン更新のみ
+    const activeCard = document.querySelector('.build-card.active-card');
+    if (activeCard) {
+      document.getElementById('buildDetailBody').innerHTML = buildDetailHTML(activeCard.dataset.id);
+    }
   } else {
     if (buildPool.length >= 3) return;
     buildPool.push(buildId);
-  }
-  renderPool();
-  // 詳細パネルのボタン更新
-  const body = document.getElementById('buildDetailBody');
-  const activeCard = document.querySelector('.build-card.active-card');
-  if (activeCard) {
-    body.innerHTML = buildDetailHTML(activeCard.dataset.id);
+    renderPool();
+    // 追加時は詳細パネルを閉じる
+    closeBuildDetail();
   }
 }
 
