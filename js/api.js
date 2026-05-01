@@ -30,7 +30,6 @@ const API = {
  
     const data = await res.json();
     if (data.error === 'Unauthorized') {
-      clearCredentials();
       throw new Error('TOKEN_INVALID');
     }
     if (data.error) throw new Error(data.error);
