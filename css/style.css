@@ -356,4 +356,9 @@ header {
   color: #8bc34a;
   text-decoration: none;
 }
-.nav-dropdown a .nav-icon { font-size: 1.1em; }
+.nav-dropdown a .nav-icon {
+  font-size: 1.1em;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
