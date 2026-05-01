@@ -203,6 +203,33 @@
     .add-to-pool-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
     .no-result-msg { text-align: center; padding: 40px; color: #666; font-size: 0.9em; }
+
+    /* TOPボタン */
+    #topBtn {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 48px;
+      height: 48px;
+      background: #8bc34a;
+      color: #1a1a1a;
+      border: none;
+      border-radius: 50%;
+      font-size: 1.1em;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      transition: all 0.2s;
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #topBtn:hover {
+      background: #9dd65a;
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+    }
   </style>
 </head>
 <body>
@@ -282,5 +309,7 @@
     }
   });
 </script>
+<button id="topBtn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="トップへ">▲</button>
+
 </body>
 </html>
