@@ -236,6 +236,8 @@
 
     try {
       const db = await initDB();
+      // index.htmlを開くたびに最新データに更新
+      clearDBCache(); DB = db; sessionStorage.setItem('nr_db_cache', JSON.stringify(db));
       hideAuthScreen();
       const buildCount = db.ビルド ? db.ビルド.length : 0;
       const bossCount  = db.夜の王 ? db.夜の王.length : 0;
