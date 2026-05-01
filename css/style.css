@@ -362,3 +362,21 @@ header {
   text-align: center;
   flex-shrink: 0;
 }
+
+/* 再読み込みボタン */
+#reloadBtn {
+  background: none;
+  border: 1px solid #4a4a4a;
+  border-radius: 6px;
+  color: #888;
+  width: 32px;
+  height: 32px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#reloadBtn:hover { border-color: #8bc34a; color: #8bc34a; }
+#reloadBtn:disabled { opacity: 0.4; cursor: not-allowed; }
