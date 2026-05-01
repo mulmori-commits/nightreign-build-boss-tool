@@ -380,10 +380,59 @@ const KANA_RANGES = {
   'わ': ['わ','を','ん','ワ','ヲ','ン'],
 };
 
-function matchesKana(name, kana) {
+// カタカナ→ひらがな変換
+function toHiragana(str) {
+  return str.replace(/[\u30A1-\u30F6]/g, ch =>
+    String.fromCharCode(ch.charCodeAt(0) - 0x60)
+  );
+}
+
+// ローマ字→かな行マッピング
+const ROMAJI_TO_ROW = {
+  'a':'あ', 'i':'あ', 'u':'あ', 'e':'あ', 'o':'あ',
+  'ka':'か', 'ki':'か', 'ku':'か', 'ke':'か', 'ko':'か',
+  'ga':'か', 'gi':'か', 'gu':'か', 'ge':'か', 'go':'か',
+  'sa':'さ', 'si':'さ', 'su':'さ', 'se':'さ', 'so':'さ', 'shi':'さ',
+  'ta':'た', 'te':'た', 'to':'た', 'da':'た', 'de':'た', 'do':'た',
+  'chi':'た', 'tsu':'た', 'ti':'た', 'tu':'た',
+  'na':'な', 'ni':'な', 'nu':'な', 'ne':'な', 'no':'な',
+  'ha':'は', 'hi':'は', 'hu':'は', 'he':'は', 'ho':'は', 'fu':'は',
+  'ba':'は', 'bi':'は', 'bu':'は', 'be':'は', 'bo':'は',
+  'pa':'は', 'pi':'は', 'pu':'は', 'pe':'は', 'po':'は',
+  'ma':'ま', 'mi':'ま', 'mu':'ま', 'me':'ま', 'mo':'ま',
+  'ya':'や', 'yu':'や', 'yo':'や',
+  'ra':'ら', 'ri':'ら', 'ru':'ら', 're':'ら', 'ro':'ら',
+  'wa':'わ', 'n':'わ',
+};
+const KANJI_ROW = {
+  // あ行
+  '亜':'あ', '赤':'あ', '暗':'あ', '石':'あ', '忌':'あ', '英':'あ', '黄':'あ', '王':'あ',
+  // か行
+  '還':'か', '兆':'か', '丘':'か', '黒':'か', '君':'か', '結':'か', '古':'か', '混':'か', '蜘':'か',
+  // さ行
+  '獅':'さ', '死':'さ', '失':'さ', '神':'さ', '祖':'さ',
+  // た行
+  '堕':'た', '知':'た', '著':'た', '調':'た', '接':'た', '爛':'た', '貪':'た',
+  // は行
+  '放':'は', '墓':'は', '火':'は', '飛':'は', '腐':'は', '降':'は',
+  // ま行
+  '百':'ま',
+  // や行
+  '溶':'や', '夜':'や',
+  // ら行
+  '猟':'ら', '霊':'ら', '老':'ら', '竜':'ら', '坩':'ら',
+  // あ行（大=おお）
+  '大':'あ',
+};
+
+function matchesKana(b, kana) {
   if (kana === 'all') return true;
-  const first = name.charAt(0);
-  return (KANA_RANGES[kana] || []).includes(first);
+  // 読み列があればその先頭文字で判定、なければ名前の先頭文字＋漢字ルックアップ
+  const yomi = b['読み'] || '';
+  const first = yomi ? yomi.charAt(0) : b['名前'].charAt(0);
+  const firstH = toHiragana(first);
+  if ((KANA_RANGES[kana] || []).some(c => toHiragana(c) === firstH)) return true;
+  return KANJI_ROW[first] === kana;
 }
 
 function matchesType(b, type) {
@@ -408,7 +457,8 @@ function setFieldKana(kana, btn) {
 
 function renderFieldBosses() {
   const list = document.getElementById('fieldList');
-  const q = (document.getElementById('fieldSearch')?.value || '').toLowerCase();
+  const rawQ = document.getElementById('fieldSearch')?.value || '';
+  const q = toHiragana(rawQ.toLowerCase());
 
   const unique = [];
   const seen = new Set();
@@ -416,8 +466,8 @@ function renderFieldBosses() {
     if (b['ボス種別'] !== 'フィールド') return;
     if (seen.has(b['名前'])) return;
     if (!matchesType(b, currentFieldType)) return;
-    if (!matchesKana(b['名前'], currentFieldKana)) return;
-    if (q && !b['名前'].toLowerCase().includes(q)) return;
+    if (!matchesKana(b, currentFieldKana)) return;
+    if (q && !toHiragana(b['名前'].toLowerCase()).includes(q) && !toHiragana((b['読み'] || '').toLowerCase()).includes(q)) return;
     seen.add(b['名前']);
     unique.push(b);
   });
@@ -436,6 +486,16 @@ function renderFieldBosses() {
 }
 
 function filterField() {
+  const raw = document.getElementById('fieldSearch')?.value || '';
+  // ローマ字入力の場合は行フィルターを自動設定
+  const romajiRow = ROMAJI_TO_ROW[raw.toLowerCase()];
+  if (romajiRow) {
+    const btn = document.querySelector(`#fieldKanaFilter .filter-btn[data-kana="${romajiRow}"]`);
+    if (btn) {
+      setFieldKana(romajiRow, btn);
+      return;
+    }
+  }
   renderFieldBosses();
 }
 
