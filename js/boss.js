@@ -364,22 +364,68 @@ function resetNarrow() {
 }
 
 // ===== フィールドボス =====
-function renderFieldBosses(filter) {
+let currentFieldType = 'all';
+let currentFieldKana = 'all';
+
+const KANA_RANGES = {
+  'あ': ['あ','い','う','え','お','ア','イ','ウ','エ','オ'],
+  'か': ['か','き','く','け','こ','カ','キ','ク','ケ','コ','が','ぎ','ぐ','げ','ご','ガ','ギ','グ','ゲ','ゴ'],
+  'さ': ['さ','し','す','せ','そ','サ','シ','ス','セ','ソ','ざ','じ','ず','ぜ','ぞ','ザ','ジ','ズ','ゼ','ゾ'],
+  'た': ['た','ち','つ','て','と','タ','チ','ツ','テ','ト','だ','ぢ','づ','で','ど','ダ','ヂ','ヅ','デ','ド'],
+  'な': ['な','に','ぬ','ね','の','ナ','ニ','ヌ','ネ','ノ'],
+  'は': ['は','ひ','ふ','へ','ほ','ハ','ヒ','フ','ヘ','ホ','ば','び','ぶ','べ','ぼ','バ','ビ','ブ','ベ','ボ','ぱ','ぴ','ぷ','ぺ','ぽ','パ','ピ','プ','ペ','ポ'],
+  'ま': ['ま','み','む','め','も','マ','ミ','ム','メ','モ'],
+  'や': ['や','ゆ','よ','ヤ','ユ','ヨ'],
+  'ら': ['ら','り','る','れ','ろ','ラ','リ','ル','レ','ロ'],
+  'わ': ['わ','を','ん','ワ','ヲ','ン'],
+};
+
+function matchesKana(name, kana) {
+  if (kana === 'all') return true;
+  const first = name.charAt(0);
+  return (KANA_RANGES[kana] || []).includes(first);
+}
+
+function matchesType(b, type) {
+  if (type === 'all') return true;
+  const loc = b['前哨戦'] || '';
+  return loc.includes(type);
+}
+
+function setFieldType(type, btn) {
+  currentFieldType = type;
+  document.querySelectorAll('#fieldTypeFilter .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFieldBosses();
+}
+
+function setFieldKana(kana, btn) {
+  currentFieldKana = kana;
+  document.querySelectorAll('#fieldKanaFilter .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFieldBosses();
+}
+
+function renderFieldBosses() {
   const list = document.getElementById('fieldList');
-  const q = filter ? filter.toLowerCase() : '';
-  const bosses = allSubBosses.filter(b =>
-    b['ボス種別'] === 'フィールド' &&
-    (!q || b['名前'].toLowerCase().includes(q))
-  );
+  const q = (document.getElementById('fieldSearch')?.value || '').toLowerCase();
 
   const unique = [];
   const seen = new Set();
-  bosses.forEach(b => {
-    if (!seen.has(b['名前'])) {
-      seen.add(b['名前']);
-      unique.push(b);
-    }
+  allSubBosses.forEach(b => {
+    if (b['ボス種別'] !== 'フィールド') return;
+    if (seen.has(b['名前'])) return;
+    if (!matchesType(b, currentFieldType)) return;
+    if (!matchesKana(b['名前'], currentFieldKana)) return;
+    if (q && !b['名前'].toLowerCase().includes(q)) return;
+    seen.add(b['名前']);
+    unique.push(b);
   });
+
+  if (unique.length === 0) {
+    list.innerHTML = '<div style="color:#666; padding:20px; text-align:center;">該当するボスがいません</div>';
+    return;
+  }
 
   list.innerHTML = unique.map(b => `
     <div class="field-card" onclick="showSubBossDetail('${b['名前'].replace(/'/g,"\\'")}')">
@@ -390,8 +436,7 @@ function renderFieldBosses(filter) {
 }
 
 function filterField() {
-  const q = document.getElementById('fieldSearch').value;
-  renderFieldBosses(q);
+  renderFieldBosses();
 }
 
 // ===== タブ切り替え =====
