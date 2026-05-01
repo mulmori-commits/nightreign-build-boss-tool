@@ -32,18 +32,22 @@ function renderCharaFilter() {
   const container = document.getElementById('charaFilter');
   const chars = [{ id: 'all', name: '全て' }, ...allChara];
 
-  container.innerHTML = chars.map(c =>
-    `<button class="filter-btn ${c.id === 'all' ? 'active' : ''}"
+  container.innerHTML = chars.map(c => {
+    const isAll    = c.id === 'all';
+    const isCommon = c['名前'] === '共通';
+    const extraClass = isCommon ? ' filter-btn-common' : '';
+    return `<button class="filter-btn${extraClass} ${isAll ? 'active' : ''}"
       onclick="setCharaFilter('${c['キャラID'] || c.id}', this)">
       ${c['名前'] || c.name}
-    </button>`
-  ).join('');
+    </button>`;
+  }).join('');
 }
 
 function setCharaFilter(charaId, btn) {
   currentCharaFilter = charaId;
   document.querySelectorAll('#charaFilter .filter-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  closeBuildDetail();
   filterBuilds();
 }
 
@@ -54,12 +58,10 @@ function filterBuilds() {
 
   let filtered = allBuilds.filter(b => b['公開フラグ'] !== false && b['公開フラグ'] !== 'FALSE');
 
-  // キャラフィルター
   if (currentCharaFilter !== 'all') {
     filtered = filtered.filter(b => b['キャラID'] === currentCharaFilter);
   }
 
-  // 効果タグフィルター
   if (tagQ) {
     filtered = filtered.filter(b => {
       const tagIds = buildTagRels
@@ -73,7 +75,6 @@ function filterBuilds() {
     });
   }
 
-  // 付帯効果フィルター
   if (subQ) {
     filtered = filtered.filter(b => {
       const subIds = buildSubRels
@@ -103,11 +104,11 @@ function renderBuilds(builds) {
   grid.innerHTML = builds.map(b => {
     const chara = allChara.find(c => c['キャラID'] === b['キャラID']);
     const charaName = chara ? chara['名前'] : b['キャラID'];
+    const isCommon = charaName === '共通';
 
     const weapon = allWeapons.find(w => w['武器ID'] === b['武器ID']);
     const weaponName = weapon ? weapon['名前'] : '';
 
-    // 効果タグ（最大3件表示）
     const tagIds = buildTagRels
       .filter(r => r['ビルドID'] === b['ビルドID'])
       .map(r => r['タグID']);
@@ -117,10 +118,10 @@ function renderBuilds(builds) {
     }).filter(Boolean);
 
     return `
-      <div class="build-card" onclick="showBuildDetail('${b['ビルドID']}')">
+      <div class="build-card" data-id="${b['ビルドID']}" onclick="showBuildDetail('${b['ビルドID']}')">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
           <h3>${b['ビルド名'] || b['ビルドID']}</h3>
-          <span class="badge badge-char">${charaName}</span>
+          <span class="badge ${isCommon ? 'badge-char-common' : 'badge-char'}">${charaName}</span>
         </div>
         <div class="build-meta">
           ${weaponName ? `🗡 ${weaponName}` : ''}
@@ -138,16 +139,23 @@ function renderBuilds(builds) {
   }).join('');
 }
 
-// ===== ビルド詳細モーダル =====
+// ===== ビルド詳細（インラインパネル） =====
 function showBuildDetail(buildId) {
+  // 同じカードをクリックしたら閉じる
+  const isSame = document.querySelector(`.build-card[data-id="${buildId}"]`)?.classList.contains('active-card');
+  if (isSame) {
+    closeBuildDetail();
+    return;
+  }
+
   const build = allBuilds.find(b => b['ビルドID'] === buildId);
   if (!build) return;
 
   const chara  = allChara.find(c => c['キャラID'] === build['キャラID']);
   const weapon = allWeapons.find(w => w['武器ID'] === build['武器ID']);
   const skill  = allSkills.find(s => s['戦技ID'] === build['戦技ID']);
+  const isCommon = chara && chara['名前'] === '共通';
 
-  // 魔術祈祷
   const spellIds = buildSpellRels
     .filter(r => r['ビルドID'] === buildId)
     .sort((a, b) => (a['順番'] || 0) - (b['順番'] || 0))
@@ -157,7 +165,6 @@ function showBuildDetail(buildId) {
     return s ? s['名前'] : id;
   });
 
-  // 効果タグ
   const tagIds = buildTagRels
     .filter(r => r['ビルドID'] === buildId)
     .map(r => r['タグID']);
@@ -166,7 +173,6 @@ function showBuildDetail(buildId) {
     return t ? t['名前'] : '';
   }).filter(Boolean);
 
-  // 付帯効果
   const subIds = buildSubRels
     .filter(r => r['ビルドID'] === buildId)
     .map(r => r['付帯効果ID']);
@@ -175,13 +181,15 @@ function showBuildDetail(buildId) {
     return s ? s['名前'] : '';
   }).filter(Boolean);
 
-  let html = `
-    <h2>${build['ビルド名'] || buildId}</h2>
+  let html = `<h2 style="color:#8bc34a; font-size:1.1em; margin-bottom:14px; padding-right:24px;">
+    ${build['ビルド名'] || buildId}
+  </h2>`;
 
+  html += `
     <div class="detail-row">
       <span class="detail-label">キャラ</span>
       <span class="detail-value">
-        <span class="badge badge-char">${chara ? chara['名前'] : build['キャラID']}</span>
+        <span class="badge ${isCommon ? 'badge-char-common' : 'badge-char'}">${chara ? chara['名前'] : build['キャラID']}</span>
       </span>
     </div>
   `;
@@ -259,16 +267,23 @@ function showBuildDetail(buildId) {
     `;
   }
 
-  document.getElementById('modalBody').innerHTML = html;
-  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('buildDetailBody').innerHTML = html;
+  const panel = document.getElementById('buildDetail');
+  panel.classList.remove('hidden');
+
+  // カードハイライト
+  document.querySelectorAll('.build-card').forEach(c => {
+    c.classList.toggle('active-card', c.dataset.id === buildId);
+  });
+
+  // パネルへスクロール
+  setTimeout(() => {
+    const top = panel.getBoundingClientRect().top + window.scrollY - 80;
+    window.scrollTo({ top, behavior: 'smooth' });
+  }, 50);
 }
 
-// ===== モーダル =====
-function closeModal(e) {
-  if (e.target === document.getElementById('modalOverlay')) {
-    document.getElementById('modalOverlay').classList.remove('show');
-  }
-}
-function closeModalBtn() {
-  document.getElementById('modalOverlay').classList.remove('show');
+function closeBuildDetail() {
+  document.getElementById('buildDetail').classList.add('hidden');
+  document.querySelectorAll('.build-card').forEach(c => c.classList.remove('active-card'));
 }
