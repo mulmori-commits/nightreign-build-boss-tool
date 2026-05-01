@@ -161,7 +161,31 @@ function buildDetailHTML(buildId, showPoolBtn = true) {
     return t ? t['名前'] : '';
   }).filter(Boolean);
 
-  // 付帯効果をカテゴリ別にグループ化
+  // 付帯効果をカテゴリ別にグループ化（カテゴリ表示順固定）
+  const CATEGORY_ORDER = [
+    '攻撃力',
+    '攻撃力/魔術',
+    '攻撃力/祈祷',
+    '攻撃力/魔術/祈祷',
+    '攻撃力/射撃',
+    '攻撃力/ガード',
+    '戦技',
+    '戦技/攻撃力',
+    '魔術/祈祷',
+    'カット率',
+    'カット率/魔術/祈祷',
+    'カット率/ガード',
+    'ガード',
+    'ガード崩し',
+    '回復',
+    '射撃/魔術/祈祷',
+    '付加',
+    '付加/発生',
+    '発生',
+    '耐性',
+    '特殊',
+    'その他',
+  ];
   const subIds = buildSubRels.filter(r => r['ビルドID'] === buildId).map(r => r['付帯効果ID']);
   const subByCategory = {};
   subIds.forEach(id => {
@@ -170,6 +194,15 @@ function buildDetailHTML(buildId, showPoolBtn = true) {
     const cat = s['分類'] || 'その他';
     if (!subByCategory[cat]) subByCategory[cat] = [];
     subByCategory[cat].push(s['名前']);
+  });
+  // カテゴリを固定順にソート
+  const sortedSubByCategory = {};
+  CATEGORY_ORDER.forEach(cat => {
+    if (subByCategory[cat]) sortedSubByCategory[cat] = subByCategory[cat];
+  });
+  // 未定義カテゴリは末尾に追加
+  Object.keys(subByCategory).forEach(cat => {
+    if (!sortedSubByCategory[cat]) sortedSubByCategory[cat] = subByCategory[cat];
   });
 
   let html = `<h2 style="color:#8bc34a; font-size:1.1em; margin-bottom:14px; padding-right:24px;">
@@ -222,7 +255,7 @@ function buildDetailHTML(buildId, showPoolBtn = true) {
     html += `<div class="detail-row">
       <span class="detail-label">推奨付帯</span>
       <span class="detail-value">
-        ${Object.entries(subByCategory).map(([cat, names]) => `
+        ${Object.entries(sortedSubByCategory).map(([cat, names]) => `
           <div class="sub-category-row">
             <div class="sub-category-label">${cat}</div>
             <div class="tag-row">${names.map(n => `<span class="sub-chip">${n}</span>`).join('')}</div>
