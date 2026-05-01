@@ -15,6 +15,11 @@ function clearCredentials() {
   localStorage.removeItem(STORAGE_KEY_URL);
 }
 
+function clearDBCache() {
+  sessionStorage.removeItem(SESSION_KEY);
+  DB = null;
+}
+
 const API = {
   async fetchAll() {
     const token  = getToken();
