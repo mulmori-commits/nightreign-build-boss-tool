@@ -504,7 +504,15 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + tab).classList.add('active');
-  if (event && event.target) event.target.classList.add('active');
+  // eventが存在する場合のみボタンをハイライト
+  if (typeof event !== 'undefined' && event && event.target && event.target.classList) {
+    event.target.classList.add('active');
+  } else {
+    // プログラムから呼ばれた場合はタブ名で対応ボタンを探す
+    const tabMap = { night: 0, narrow: 1, field: 2 };
+    const btns = document.querySelectorAll('.tab-btn');
+    if (btns[tabMap[tab]]) btns[tabMap[tab]].classList.add('active');
+  }
   location.hash = tab === 'night' ? '' : tab;
 }
 
