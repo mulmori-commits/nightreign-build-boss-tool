@@ -110,14 +110,17 @@
       background: #1e1e1e;
       border: 1px solid #5a8a3a;
       border-radius: 12px;
-      padding: 14px;
+      padding: 16px;
       margin-bottom: 16px;
+      margin-left: -20px;
+      margin-right: -20px;
     }
     .pool-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 12px;
+      padding: 0 6px;
     }
     .pool-grid {
       display: grid;
@@ -126,33 +129,45 @@
     }
     @media (max-width: 900px) {
       .pool-grid { grid-template-columns: 1fr; }
+      .pool-section { margin-left: -10px; margin-right: -10px; }
     }
     .pool-card {
       background: #2a2a2a;
       border: 1px solid #3a5a3a;
       border-radius: 10px;
-      padding: 12px;
+      padding: 16px;
       position: relative;
-      font-size: 0.9em;
+      font-size: 1em;
+      height: 460px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #3a5a3a #1e1e1e;
     }
-    .pool-card h3 { font-size: 0.9em; color: #f0f0f0; margin-bottom: 6px; padding-right: 20px; }
+    .pool-card::-webkit-scrollbar { width: 5px; }
+    .pool-card::-webkit-scrollbar-track { background: #1e1e1e; }
+    .pool-card::-webkit-scrollbar-thumb { background: #3a5a3a; border-radius: 3px; }
+    .pool-card h3 { font-size: 1em; color: #f0f0f0; margin-bottom: 8px; padding-right: 24px; }
     .pool-remove-btn {
-      position: absolute;
-      top: 8px; right: 10px;
+      position: sticky;
+      top: 0;
+      float: right;
       background: none;
       border: none;
       color: #666;
-      font-size: 1.1em;
+      font-size: 1.2em;
       cursor: pointer;
       line-height: 1;
+      z-index: 1;
     }
     .pool-remove-btn:hover { color: #f88; }
     .pool-empty-slot {
       background: #222;
       border: 1px dashed #3a3a3a;
       border-radius: 10px;
-      padding: 12px;
-      text-align: center;
+      height: 460px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       color: #444;
       font-size: 0.85em;
     }
