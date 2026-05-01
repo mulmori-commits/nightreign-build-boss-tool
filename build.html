@@ -25,6 +25,10 @@
       border-color: #8bc34a;
       transform: translateY(-2px);
     }
+    .build-card.active-card {
+      border-color: #8bc34a;
+      box-shadow: 0 0 0 2px rgba(139,195,74,0.3);
+    }
     .build-card h3 {
       font-size: 0.95em;
       color: #f0f0f0;
@@ -41,21 +45,45 @@
       gap: 4px;
       margin-top: 6px;
     }
+    /* 遺物効果タグ：緑テーマ */
     .tag-chip {
       padding: 2px 7px;
-      background: #1e2e3a;
-      color: #6ab0d6;
-      border: 1px solid #2a4a5a;
+      background: #1e3a14;
+      color: #7bc23a;
+      border: 1px solid #3a5a28;
       border-radius: 4px;
       font-size: 0.78em;
     }
+    /* 付帯効果チップ：紫テーマ */
     .sub-chip {
       padding: 2px 7px;
-      background: #2e2a1e;
-      color: #d6a84a;
-      border: 1px solid #5a4a2a;
+      background: #231040;
+      color: #c090e8;
+      border: 1px solid #5a3a8a;
       border-radius: 4px;
       font-size: 0.78em;
+    }
+
+    /* キャラバッジ：共通は緑、それ以外はニュートラル */
+    .badge-char {
+      background: #2a2a2a;
+      color: #aaa;
+      border: 1px solid #4a4a4a;
+    }
+    .badge-char-common {
+      background: #2e4a1e;
+      color: #8bc34a;
+      border: 1px solid #5a8a3a;
+    }
+
+    /* 共通フィルターボタン */
+    .filter-btn-common {
+      border-color: #5a8a3a !important;
+      color: #8bc34a !important;
+    }
+    .filter-btn-common.active {
+      background-color: #8bc34a !important;
+      color: #1a1a1a !important;
     }
 
     /* 絞り込みパネル */
@@ -75,7 +103,56 @@
       margin-bottom: 4px;
     }
 
-    /* モーダル */
+    /* ビルド詳細インラインパネル */
+    .build-detail-panel {
+      background: #2a2a2a;
+      border: 1px solid #8bc34a;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      position: relative;
+      animation: slideDown 0.2s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .detail-close-btn {
+      position: absolute;
+      top: 12px; right: 16px;
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 1.4em;
+      cursor: pointer;
+      line-height: 1;
+    }
+    .detail-close-btn:hover { color: #f88; }
+
+    .detail-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 0.9em;
+      align-items: flex-start;
+    }
+    .detail-label {
+      color: #888;
+      min-width: 80px;
+      flex-shrink: 0;
+    }
+    .detail-value {
+      color: #e0e0e0;
+      flex: 1;
+    }
+    .no-result-msg {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    /* サブボス詳細モーダル（残存） */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -106,34 +183,6 @@
       cursor: pointer;
     }
     .modal-close:hover { color: #f88; }
-    .modal h2 {
-      font-size: 1.1em;
-      color: #8bc34a;
-      margin-bottom: 14px;
-      padding-right: 24px;
-    }
-    .detail-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
-      font-size: 0.9em;
-      align-items: flex-start;
-    }
-    .detail-label {
-      color: #888;
-      min-width: 80px;
-      flex-shrink: 0;
-    }
-    .detail-value {
-      color: #e0e0e0;
-      flex: 1;
-    }
-    .no-result-msg {
-      text-align: center;
-      padding: 40px;
-      color: #666;
-      font-size: 0.9em;
-    }
   </style>
 </head>
 <body>
@@ -155,41 +204,35 @@
     <div class="filter-panel">
       <div class="section-title" style="margin-bottom:12px;">ビルド検索</div>
 
-      <!-- キャラ絞り込み -->
       <div class="filter-row">
         <label>キャラ</label>
         <div class="filter-group" id="charaFilter"></div>
       </div>
 
-      <!-- 遺物効果タグ絞り込み -->
       <div class="filter-row">
         <label>遺物効果タグ</label>
         <input type="text" class="search-box" id="tagSearch"
           placeholder="効果タグで絞り込み（例：出血、魔術）" oninput="filterBuilds()">
       </div>
 
-      <!-- 付帯効果絞り込み -->
       <div class="filter-row">
         <label>推奨付帯効果</label>
         <input type="text" class="search-box" id="subSearch"
           placeholder="付帯効果で絞り込み（例：魔術強化、戦技）" oninput="filterBuilds()">
       </div>
 
-      <!-- 件数 -->
       <div class="text-small text-muted" id="resultCount"></div>
+    </div>
+
+    <!-- ビルド詳細インラインパネル（絞り込みとグリッドの間） -->
+    <div id="buildDetail" class="build-detail-panel hidden">
+      <button class="detail-close-btn" onclick="closeBuildDetail()">×</button>
+      <div id="buildDetailBody"></div>
     </div>
 
     <!-- ビルド一覧 -->
     <div class="build-grid" id="buildGrid"></div>
 
-  </div>
-</div>
-
-<!-- ビルド詳細モーダル -->
-<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
-  <div class="modal">
-    <button class="modal-close" onclick="closeModalBtn()">×</button>
-    <div id="modalBody"></div>
   </div>
 </div>
 
@@ -203,15 +246,15 @@
       document.getElementById('mainContent').classList.remove('hidden');
       initBuildPage();
     } catch(e) {
-  document.getElementById('loading').classList.add('hidden');
-  if (e.message === 'TOKEN_NOT_SET' || e.message === 'TOKEN_INVALID') {
-    location.href = 'index.html';
-    return;
-  }
-  const err = document.getElementById('errorMsg');
-  err.textContent = '❌ データ読み込みに失敗しました: ' + e.message;
-  err.classList.remove('hidden');
-}
+      document.getElementById('loading').classList.add('hidden');
+      if (e.message === 'TOKEN_NOT_SET' || e.message === 'TOKEN_INVALID') {
+        location.href = 'index.html';
+        return;
+      }
+      const err = document.getElementById('errorMsg');
+      err.textContent = '❌ データ読み込みに失敗しました: ' + e.message;
+      err.classList.remove('hidden');
+    }
   });
 </script>
 </body>
