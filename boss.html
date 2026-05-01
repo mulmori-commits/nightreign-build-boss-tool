@@ -248,19 +248,21 @@
 <header>
   <div class="header-inner">
     <a href="index.html" class="site-title">⚔ NIGHTREIGN TOOL</a>
-    <nav class="tab-nav">
-  <button class="tab-btn active" onclick="switchTab('night')">夜の王</button>
-  <button class="tab-btn" onclick="switchTab('narrow')">3日目絞り込み</button>
-  <button class="tab-btn" onclick="switchTab('field')" id="fieldTabBtn">フィールドボス</button>
-</nav>
-<div class="nav-menu-wrap" id="navMenuWrap">
-  <button class="nav-menu-btn" id="navMenuBtn" onclick="toggleNavMenu()">☰</button>
-  <div class="nav-dropdown" id="navDropdown">
-    <a href="boss.html"><span class="nav-icon">👁</span>ボス情報</a>
-    <a href="build.html"><span class="nav-icon">⚔</span>ビルド検索</a>
-    <a href="boss.html#field"><span class="nav-icon">🗺</span>フィールドボス辞書</a>
-  </div>
-</div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <nav class="tab-nav">
+        <button class="tab-btn active" onclick="switchTab('night')">夜の王</button>
+        <button class="tab-btn" onclick="switchTab('narrow')">3日目絞り込み</button>
+        <button class="tab-btn" onclick="switchTab('field')" id="fieldTabBtn">フィールドボス</button>
+      </nav>
+      <div class="nav-menu-wrap" id="navMenuWrap">
+        <button class="nav-menu-btn" id="navMenuBtn" onclick="toggleNavMenu()">☰</button>
+        <div class="nav-dropdown" id="navDropdown">
+          <a href="boss.html"><span class="nav-icon">👁</span>ボス情報</a>
+          <a href="build.html"><span class="nav-icon">⚔</span>ビルド検索</a>
+          <a href="boss.html#field"><span class="nav-icon">🗺</span>フィールドボス辞書</a>
+        </div>
+      </div>
+    </div>
   </div>
 </header>
 
