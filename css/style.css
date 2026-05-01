@@ -292,3 +292,67 @@ header {
 .mt-12 { margin-top: 12px; }
 .mt-16 { margin-top: 16px; }
 .hidden { display: none !important; }
+
+/* ===== ナビメニュー ===== */
+.nav-menu-wrap {
+  position: relative;
+}
+
+.nav-menu-btn {
+  background: #2a2a2a;
+  border: 1px solid #4a4a4a;
+  border-radius: 6px;
+  color: #ccc;
+  font-size: 1.1em;
+  width: 36px;
+  height: 36px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  user-select: none;
+}
+.nav-menu-btn:hover {
+  border-color: #8bc34a;
+  color: #8bc34a;
+}
+.nav-menu-btn.open {
+  border-color: #8bc34a;
+  color: #8bc34a;
+  background: #1e2e14;
+}
+
+.nav-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: #1a1a1a;
+  border: 1px solid #8bc34a;
+  border-radius: 8px;
+  min-width: 180px;
+  z-index: 300;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.6);
+}
+.nav-dropdown.show { display: block; }
+
+.nav-dropdown a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  color: #e0e0e0;
+  font-size: 0.9em;
+  text-decoration: none;
+  transition: background 0.15s;
+  border-bottom: 1px solid #2a2a2a;
+}
+.nav-dropdown a:last-child { border-bottom: none; }
+.nav-dropdown a:hover {
+  background: #2a2a2a;
+  color: #8bc34a;
+  text-decoration: none;
+}
+.nav-dropdown a .nav-icon { font-size: 1.1em; }
