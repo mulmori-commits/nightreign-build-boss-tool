@@ -331,7 +331,8 @@ header {
   background: #1a1a1a;
   border: 1px solid #8bc34a;
   border-radius: 8px;
-  min-width: 180px;
+  min-width: 220px;
+  white-space: nowrap;
   z-index: 300;
   overflow: hidden;
   box-shadow: 0 6px 20px rgba(0,0,0,0.6);
