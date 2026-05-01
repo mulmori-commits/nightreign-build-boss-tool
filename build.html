@@ -21,36 +21,22 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-    .build-card:hover {
-      border-color: #8bc34a;
-      transform: translateY(-2px);
-    }
+    .build-card:hover { border-color: #8bc34a; transform: translateY(-2px); }
     .build-card.active-card {
       border-color: #8bc34a;
       box-shadow: 0 0 0 2px rgba(139,195,74,0.3);
     }
-    .build-card h3 {
-      font-size: 0.95em;
-      color: #f0f0f0;
-      margin-bottom: 6px;
-    }
-    .build-card .build-meta {
-      font-size: 0.82em;
-      color: #888;
-      margin-bottom: 8px;
-    }
-    .tag-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin-top: 6px;
-    }
-    /* 遺物効果タグ：緑テーマ */
+    .build-card h3 { font-size: 0.95em; color: #f0f0f0; margin-bottom: 6px; }
+    .build-card .build-meta { font-size: 0.82em; color: #888; margin-bottom: 8px; }
+
+    .tag-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+
+    /* 遺物効果タグ：旧共通バッジ色（オレンジ） */
     .tag-chip {
       padding: 2px 7px;
-      background: #1e3a14;
-      color: #7bc23a;
-      border: 1px solid #3a5a28;
+      background: #3a2a1e;
+      color: #d6844a;
+      border: 1px solid #8a5a3a;
       border-radius: 4px;
       font-size: 0.78em;
     }
@@ -64,27 +50,11 @@
       font-size: 0.78em;
     }
 
-    /* キャラバッジ：共通は緑、それ以外はニュートラル */
-    .badge-char {
-      background: #2a2a2a;
-      color: #aaa;
-      border: 1px solid #4a4a4a;
-    }
-    .badge-char-common {
-      background: #2e4a1e;
-      color: #8bc34a;
-      border: 1px solid #5a8a3a;
-    }
-
-    /* 共通フィルターボタン */
-    .filter-btn-common {
-      border-color: #5a8a3a !important;
-      color: #8bc34a !important;
-    }
-    .filter-btn-common.active {
-      background-color: #8bc34a !important;
-      color: #1a1a1a !important;
-    }
+    /* キャラバッジ */
+    .badge-char { background: #2a2a2a; color: #aaa; border: 1px solid #4a4a4a; }
+    .badge-char-common { background: #2e4a1e; color: #8bc34a; border: 1px solid #5a8a3a; }
+    .filter-btn-common { border-color: #5a8a3a !important; color: #8bc34a !important; }
+    .filter-btn-common.active { background-color: #8bc34a !important; color: #1a1a1a !important; }
 
     /* 絞り込みパネル */
     .filter-panel {
@@ -93,15 +63,8 @@
       padding: 14px;
       margin-bottom: 16px;
     }
-    .filter-panel .filter-row {
-      margin-bottom: 10px;
-    }
-    .filter-panel label {
-      display: block;
-      font-size: 0.82em;
-      color: #888;
-      margin-bottom: 4px;
-    }
+    .filter-panel .filter-row { margin-bottom: 10px; }
+    .filter-panel label { display: block; font-size: 0.82em; color: #888; margin-bottom: 4px; }
 
     /* ビルド詳細インラインパネル */
     .build-detail-panel {
@@ -128,7 +91,6 @@
       line-height: 1;
     }
     .detail-close-btn:hover { color: #f88; }
-
     .detail-row {
       display: flex;
       gap: 8px;
@@ -136,53 +98,80 @@
       font-size: 0.9em;
       align-items: flex-start;
     }
-    .detail-label {
-      color: #888;
-      min-width: 80px;
-      flex-shrink: 0;
+    .detail-label { color: #888; min-width: 80px; flex-shrink: 0; }
+    .detail-value { color: #e0e0e0; flex: 1; }
+
+    /* 付帯効果カテゴリ行 */
+    .sub-category-row { margin-bottom: 6px; }
+    .sub-category-label { font-size: 0.78em; color: #666; margin-bottom: 3px; }
+
+    /* プール */
+    .pool-section {
+      background: #1e1e1e;
+      border: 1px solid #5a8a3a;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
     }
-    .detail-value {
-      color: #e0e0e0;
-      flex: 1;
+    .pool-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
     }
-    .no-result-msg {
-      text-align: center;
-      padding: 40px;
-      color: #666;
+    .pool-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 900px) {
+      .pool-grid { grid-template-columns: 1fr; }
+    }
+    .pool-card {
+      background: #2a2a2a;
+      border: 1px solid #3a5a3a;
+      border-radius: 10px;
+      padding: 12px;
+      position: relative;
       font-size: 0.9em;
     }
-
-    /* サブボス詳細モーダル（残存） */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      z-index: 200;
-      overflow-y: auto;
-      padding: 20px;
-    }
-    .modal-overlay.show { display: flex; align-items: flex-start; justify-content: center; }
-    .modal {
-      background: #2a2a2a;
-      border: 1px solid #8bc34a;
-      border-radius: 12px;
-      padding: 20px;
-      max-width: 700px;
-      width: 100%;
-      margin: auto;
-      position: relative;
-    }
-    .modal-close {
+    .pool-card h3 { font-size: 0.9em; color: #f0f0f0; margin-bottom: 6px; padding-right: 20px; }
+    .pool-remove-btn {
       position: absolute;
-      top: 12px; right: 16px;
+      top: 8px; right: 10px;
       background: none;
       border: none;
-      color: #888;
-      font-size: 1.4em;
+      color: #666;
+      font-size: 1.1em;
       cursor: pointer;
+      line-height: 1;
     }
-    .modal-close:hover { color: #f88; }
+    .pool-remove-btn:hover { color: #f88; }
+    .pool-empty-slot {
+      background: #222;
+      border: 1px dashed #3a3a3a;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      color: #444;
+      font-size: 0.85em;
+    }
+
+    .add-to-pool-btn {
+      padding: 6px 14px;
+      background: #3a5a3a;
+      color: #8bc34a;
+      border: 1px solid #5a8a3a;
+      border-radius: 6px;
+      font-size: 0.85em;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 12px;
+    }
+    .add-to-pool-btn:hover { background: #4a7a4a; }
+    .add-to-pool-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .no-result-msg { text-align: center; padding: 40px; color: #666; font-size: 0.9em; }
   </style>
 </head>
 <body>
@@ -200,31 +189,36 @@
 
   <div id="mainContent" class="hidden">
 
+    <!-- プールセクション -->
+    <div id="poolSection" class="pool-section hidden">
+      <div class="pool-header">
+        <div class="section-title" style="margin-bottom:0;">選択中のビルド</div>
+        <button onclick="clearPool()" class="btn btn-danger" style="padding:4px 12px; font-size:0.82em;">クリア</button>
+      </div>
+      <div class="pool-grid" id="poolGrid"></div>
+    </div>
+
     <!-- 絞り込みパネル -->
     <div class="filter-panel">
       <div class="section-title" style="margin-bottom:12px;">ビルド検索</div>
-
       <div class="filter-row">
         <label>キャラ</label>
         <div class="filter-group" id="charaFilter"></div>
       </div>
-
       <div class="filter-row">
         <label>遺物効果タグ</label>
         <input type="text" class="search-box" id="tagSearch"
           placeholder="効果タグで絞り込み（例：出血、魔術）" oninput="filterBuilds()">
       </div>
-
       <div class="filter-row">
         <label>推奨付帯効果</label>
         <input type="text" class="search-box" id="subSearch"
           placeholder="付帯効果で絞り込み（例：魔術強化、戦技）" oninput="filterBuilds()">
       </div>
-
       <div class="text-small text-muted" id="resultCount"></div>
     </div>
 
-    <!-- ビルド詳細インラインパネル（絞り込みとグリッドの間） -->
+    <!-- ビルド詳細インラインパネル -->
     <div id="buildDetail" class="build-detail-panel hidden">
       <button class="detail-close-btn" onclick="closeBuildDetail()">×</button>
       <div id="buildDetailBody"></div>
